@@ -9,6 +9,7 @@ from flask_login import (
 )
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+from werkzeug.middleware.proxy_fix import ProxyFix
 from authlib.integrations.flask_client import OAuth
 from dotenv import load_dotenv
 
@@ -21,6 +22,18 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "cambia-esto-en-produccion")
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///app.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+# Render (y la mayoría de servicios de hosting) reciben la conexión segura (https)
+# en su propio servidor y la reenvían a la app como http normal. Sin esto, Flask
+# no sabe que la conexión original era https, y eso puede romper el login con
+# Google (la URL de redirección generada no coincide con la registrada, o la
+# cookie de sesión no se valida bien). ProxyFix corrige eso leyendo las
+# cabeceras que el proxy añade.
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+
+# Ajustes de la cookie de sesión: SameSite=Lax permite que la cookie sobreviva
+# la redirección de vuelta desde Google.
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
 # Subida de fotos de perfil
 UPLOAD_FOLDER = os.path.join(app.root_path, "static", "uploads")
@@ -98,6 +111,25 @@ class Message(db.Model):
 
     sender = db.relationship("User", foreign_keys=[sender_id])
     receiver = db.relationship("User", foreign_keys=[receiver_id])
+
+
+# ---------------------------------------------------------------------------
+# Preparar la base de datos al arrancar
+# ---------------------------------------------------------------------------
+# En este proyecto (todavía en fase de pruebas) no usamos migraciones, así que
+# si el modelo de datos cambia, la base de datos vieja puede quedar
+# desactualizada (columnas o tablas que faltan). Para evitarlo, en cada
+# arranque se borra la base de datos anterior y se crea una nueva con el
+# esquema actual. Esto es válido mientras se prueba la app; cuando quieras
+# conservar los datos de verdad entre reinicios, se cambia por una base de
+# datos externa (Postgres) y migraciones reales.
+os.makedirs(app.instance_path, exist_ok=True)
+_db_file_path = os.path.join(app.instance_path, "app.db")
+
+with app.app_context():
+    if os.path.exists(_db_file_path):
+        os.remove(_db_file_path)
+    db.create_all()
 
 
 # ---------------------------------------------------------------------------
@@ -323,6 +355,4 @@ def auth_google_callback():
 
 
 if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()
     app.run(debug=True)
