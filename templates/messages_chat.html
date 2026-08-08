@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ other.name or other.email }} · Conecta</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+  <style>
+    body { display: flex; flex-direction: column; height: 100vh; margin: 0; }
+    .chat-header {
+      display: flex; align-items: center; gap: 12px; padding: 16px 20px;
+      border-bottom: 1px solid #1D2138; flex-shrink: 0;
+    }
+    .chat-header a { color: var(--text-dim); text-decoration: none; font-size: 20px; margin-right: 4px; }
+    .chat-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
+    .chat-avatar-fallback {
+      width: 36px; height: 36px; border-radius: 50%; background: var(--accent);
+      display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;
+    }
+    .chat-body {
+      flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 8px;
+    }
+    .bubble {
+      max-width: 70%; padding: 10px 14px; border-radius: 16px; font-size: 14.5px; line-height: 1.45;
+      word-wrap: break-word;
+    }
+    .bubble.mine {
+      align-self: flex-end; background: var(--accent); color: white; border-bottom-right-radius: 4px;
+    }
+    .bubble.theirs {
+      align-self: flex-start; background: var(--bg-panel); border: 1px solid #1D2138; border-bottom-left-radius: 4px;
+    }
+    .empty { color: var(--text-dim); font-size: 14px; text-align: center; margin: auto; }
+    .chat-form {
+      display: flex; gap: 10px; padding: 16px 20px; border-top: 1px solid #1D2138; flex-shrink: 0;
+    }
+    .chat-form input[type="text"] {
+      flex: 1; padding: 12px 14px; border-radius: 10px; border: 1px solid #2A2E4A;
+      background: var(--bg-panel); color: var(--text-main); font-size: 14.5px; font-family: inherit;
+    }
+    .chat-form input[type="text"]:focus {
+      outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(108,92,231,0.25);
+    }
+    .chat-form button {
+      padding: 0 22px; border-radius: 10px; border: none; background: var(--accent);
+      color: white; font-weight: 600; cursor: pointer; font-family: inherit;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-header">
+    <a href="{{ url_for('messages_inbox') }}">←</a>
+    {% if other.display_photo %}
+      <img class="chat-avatar" src="{{ other.display_photo }}" alt="">
+    {% else %}
+      <div class="chat-avatar-fallback">{{ other.name[:1] if other.name else other.email[:1] }}</div>
+    {% endif %}
+    <strong>{{ other.name or other.email }}</strong>
+  </div>
+
+  <div class="chat-body" id="chatBody">
+    {% if messages %}
+      {% for m in messages %}
+        <div class="bubble {{ 'mine' if m.sender_id == current_user.id else 'theirs' }}">{{ m.content }}</div>
+      {% endfor %}
+    {% else %}
+      <div class="empty">Empieza la conversación con {{ other.name or other.email }}.</div>
+    {% endif %}
+  </div>
+
+  <form class="chat-form" method="POST">
+    <input type="text" name="content" placeholder="Escribe un mensaje..." autocomplete="off" required autofocus>
+    <button type="submit">Enviar</button>
+  </form>
+
+  <script>
+    const chatBody = document.getElementById('chatBody');
+    chatBody.scrollTop = chatBody.scrollHeight;
+  </script>
+</body>
+</html>

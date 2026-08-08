@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nuevo mensaje · Conecta</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+  <style>
+    body { display: block; }
+    .wrap { max-width: 480px; margin: 0 auto; padding: 40px 20px; }
+    .user-row {
+      display: flex; align-items: center; gap: 12px; padding: 12px;
+      border-radius: 12px; text-decoration: none; color: var(--text-main);
+      border: 1px solid #1D2138; margin-bottom: 10px; transition: border-color .15s ease, background .15s ease;
+    }
+    .user-row:hover { border-color: var(--accent-soft); background: var(--bg-panel); }
+    .user-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+    .user-avatar-fallback {
+      width: 40px; height: 40px; border-radius: 50%; background: var(--accent);
+      display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;
+    }
+    .empty { color: var(--text-dim); font-size: 14px; text-align: center; padding: 40px 0; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h2>Elige con quién chatear</h2>
+
+    {% if users %}
+      {% for u in users %}
+        <a href="{{ url_for('messages_chat', user_id=u.id) }}" class="user-row">
+          {% if u.display_photo %}
+            <img class="user-avatar" src="{{ u.display_photo }}" alt="">
+          {% else %}
+            <div class="user-avatar-fallback">{{ u.name[:1] if u.name else u.email[:1] }}</div>
+          {% endif %}
+          <div>{{ u.name or u.email }}</div>
+        </a>
+      {% endfor %}
+    {% else %}
+      <div class="empty">Todavía no hay más usuarios registrados.</div>
+    {% endif %}
+
+    <div class="switch-link"><a href="{{ url_for('messages_inbox') }}">Volver a mensajes</a></div>
+  </div>
+</body>
+</html>

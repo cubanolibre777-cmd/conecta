@@ -1,0 +1,45 @@
+{% extends "base_auth.html" %}
+{% block title %}Crear cuenta · Conecta{% endblock %}
+{% block pitch_title %}Únete y ponle cara a la conversación.{% endblock %}
+{% block pitch_body %}Crea tu perfil, sube tus fotos y empieza a chatear. Las videollamadas se activan cuando quieras, con un plan de pago simple.{% endblock %}
+
+{% block form_content %}
+  <h2>Crear tu cuenta</h2>
+  <p class="subtitle">Empieza en menos de un minuto.</p>
+
+  <a href="{{ url_for('auth_google') }}" class="btn-google">
+    <svg width="18" height="18" viewBox="0 0 18 18">
+      <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84c-.21 1.13-.85 2.09-1.81 2.73v2.27h2.92c1.71-1.57 2.69-3.88 2.69-6.64z"/>
+      <path fill="#34A853" d="M9 18c2.43 0 4.47-.81 5.96-2.18l-2.92-2.27c-.81.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.71H.96v2.34C2.44 15.98 5.48 18 9 18z"/>
+      <path fill="#FBBC05" d="M3.97 10.7c-.18-.54-.28-1.11-.28-1.7s.1-1.16.28-1.7V4.96H.96A8.996 8.996 0 000 9c0 1.45.35 2.83.96 4.04l3.01-2.34z"/>
+      <path fill="#EA4335" d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0 5.48 0 2.44 2.02.96 4.96l3.01 2.34C4.68 5.16 6.66 3.58 9 3.58z"/>
+    </svg>
+    Regístrate con Google
+  </a>
+
+  <div class="divider">o con tu email</div>
+
+  <form method="POST">
+    <div class="field">
+      <label for="name">Nombre</label>
+      <input type="text" id="name" name="name" required autocomplete="name">
+    </div>
+    <div class="field">
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" required autocomplete="email">
+    </div>
+    <div class="field">
+      <label for="password">Contraseña</label>
+      <input type="password" id="password" name="password" required autocomplete="new-password" minlength="8">
+    </div>
+    <div class="field">
+      <label for="password_confirm">Confirmar contraseña</label>
+      <input type="password" id="password_confirm" name="password_confirm" required autocomplete="new-password" minlength="8">
+    </div>
+    <button type="submit" class="btn-primary">Crear cuenta</button>
+  </form>
+
+  <div class="switch-link">
+    ¿Ya tienes cuenta? <a href="{{ url_for('login') }}">Inicia sesión</a>
+  </div>
+{% endblock %}

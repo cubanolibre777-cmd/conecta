@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conecta</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+  <style>
+    .center-box {
+      width: 100%; min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 14px; text-align: center;
+    }
+    .avatar {
+      width: 64px; height: 64px; border-radius: 50%; object-fit: cover;
+      border: 2px solid var(--accent);
+    }
+    .avatar-fallback {
+      width: 64px; height: 64px; border-radius: 50%; background: var(--accent);
+      display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 22px;
+    }
+  </style>
+</head>
+<body>
+  <div class="center-box">
+    {% if user.display_photo %}
+      <img class="avatar" src="{{ user.display_photo }}" alt="">
+    {% else %}
+      <div class="avatar-fallback">{{ user.name[:1] if user.name else user.email[:1] }}</div>
+    {% endif %}
+    <h2>Hola, {{ user.name or user.email }} 👋</h2>
+    <p class="footnote">Sesión iniciada con {{ "Google" if user.auth_provider == "google" else "email" }}.</p>
+    <div style="display:flex; gap:10px; flex-wrap: wrap; justify-content:center;">
+      <a href="{{ url_for('profile') }}" class="btn-google" style="width: auto; padding: 10px 22px;">Ver mi perfil</a>
+      <a href="{{ url_for('messages_inbox') }}" class="btn-google" style="width: auto; padding: 10px 22px;">Mensajes</a>
+      <a href="{{ url_for('logout') }}" class="btn-google" style="width: auto; padding: 10px 22px;">Cerrar sesión</a>
+    </div>
+  </div>
+</body>
+</html>

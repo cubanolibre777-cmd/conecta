@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Conecta{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+</head>
+<body>
+
+  <div class="side-panel">
+    <div class="constellation">
+      <div class="node" style="width:6px;height:6px; top:18%; left:70%;"></div>
+      <div class="node" style="width:4px;height:4px; top:32%; left:85%;"></div>
+      <div class="node" style="width:8px;height:8px; top:55%; left:78%;"></div>
+      <div class="node" style="width:5px;height:5px; top:70%; left:60%;"></div>
+      <div class="node" style="width:4px;height:4px; top:82%; left:88%;"></div>
+      <div class="node" style="width:6px;height:6px; top:45%; left:92%;"></div>
+    </div>
+
+    <div class="brand">
+      <span class="brand-dot"></span>
+      Conecta
+    </div>
+
+    <div class="pitch">
+      <h1>{% block pitch_title %}Habla, comparte y llama, todo en un mismo sitio.{% endblock %}</h1>
+      <p>{% block pitch_body %}Mensajes, fotos y videollamadas en una sola cuenta. Tus llamadas se activan con un plan de pago simple, sin sorpresas.{% endblock %}</p>
+    </div>
+
+    <div class="footnote">© 2026 Conecta</div>
+  </div>
+
+  <div class="form-panel">
+    <div class="form-card">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      {% block form_content %}{% endblock %}
+    </div>
+  </div>
+
+</body>
+</html>
