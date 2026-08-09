@@ -70,10 +70,7 @@
     {% endwith %}
 
     <div class="token-card">
-      <div class="coin-icon">
-        <div class="c1">C</div>
-        <div class="c2">C</div>
-      </div>
+      <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Conecta" style="width:64px; height:64px; object-fit:contain;">
       <div class="token-label">Tokens depositados</div>
       <div class="token-amount">{{ user.tokens }}</div>
 
