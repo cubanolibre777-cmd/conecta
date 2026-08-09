@@ -95,6 +95,17 @@ authapp/
 
 - Ahora mismo el chat se actualiza recargando la página (no es en tiempo real). Es una base sencilla y funcional; el salto a mensajes instantáneos (sin recargar) se hace más adelante con `Flask-SocketIO`, la misma pieza que necesitarás para las videollamadas.
 
+## 10. Subir la app a internet (Render)
+
+1. Sube este proyecto a un repositorio de GitHub. El archivo `.gitignore` ya está preparado para que tu `.env` (con tus secretos) **nunca** se suba.
+2. En [render.com](https://render.com), crea una cuenta y un "New Web Service" conectado a tu repositorio.
+3. Build Command: `pip install -r requirements.txt`
+4. Start Command: `gunicorn app:app`
+5. En "Environment", añade `SECRET_KEY`, `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` con tus valores reales.
+6. Cuando tengas tu URL pública (ej. `https://conecta.onrender.com`), añádela como nueva URI de redirección en Google Cloud Console: `https://conecta.onrender.com/auth/google/callback`
+
+**Aviso:** en el plan gratuito de Render, el almacenamiento no es permanente — la base de datos y las fotos subidas se pueden borrar cuando el servidor se reinicia. Es perfecto para probar la app con otras personas, pero antes de un lanzamiento real conviene pasar a una base de datos externa (por ejemplo, Postgres, que Render también ofrece gratis) y a un almacenamiento de fotos externo (Amazon S3 o Cloudinary).
+
 ## 9. Notas sobre las fotos de perfil
 
 - Se guardan en `static/uploads/`, con el nombre `user_<id>.<extensión>`.

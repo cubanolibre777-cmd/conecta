@@ -138,7 +138,8 @@ with app.app_context():
 @app.route("/")
 def index():
     if current_user.is_authenticated:
-        return render_template("dashboard.html", user=current_user)
+        users = User.query.filter(User.id != current_user.id).order_by(User.name).all()
+        return render_template("dashboard.html", user=current_user, users=users)
     return redirect(url_for("login"))
 
 
@@ -202,9 +203,12 @@ def register():
 
 
 @app.route("/profile")
+@app.route("/profile/<int:user_id>")
 @login_required
-def profile():
-    return render_template("profile.html", user=current_user)
+def profile(user_id=None):
+    shown_user = User.query.get_or_404(user_id) if user_id else current_user
+    is_own_profile = shown_user.id == current_user.id
+    return render_template("profile.html", user=shown_user, is_own_profile=is_own_profile)
 
 
 @app.route("/profile/edit", methods=["GET", "POST"])

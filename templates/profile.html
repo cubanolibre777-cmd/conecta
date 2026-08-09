@@ -40,7 +40,11 @@
     {% endif %}
 
     <div class="actions">
-      <a href="{{ url_for('profile_edit') }}" class="btn-google" style="width:auto; padding:10px 22px;">Editar perfil</a>
+      {% if is_own_profile %}
+        <a href="{{ url_for('profile_edit') }}" class="btn-google" style="width:auto; padding:10px 22px;">Editar perfil</a>
+      {% else %}
+        <a href="{{ url_for('messages_chat', user_id=user.id) }}" class="btn-google" style="width:auto; padding:10px 22px;">Enviar mensaje</a>
+      {% endif %}
       <a href="{{ url_for('index') }}" class="btn-google" style="width:auto; padding:10px 22px;">Volver</a>
     </div>
   </div>

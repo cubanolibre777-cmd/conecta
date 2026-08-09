@@ -1,9 +1,15 @@
+# Entorno y secretos
 .env
 venv/
-.venv/
+
+# Base de datos local
 instance/
 *.db
+
+# Python
 __pycache__/
 *.pyc
+
+# Fotos subidas por usuarios (no subir a git; en producción usar almacenamiento externo)
 static/uploads/*
 !static/uploads/.gitkeep
