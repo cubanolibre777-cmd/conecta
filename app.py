@@ -13,6 +13,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from authlib.integrations.flask_client import OAuth
 from flask_socketio import SocketIO, emit, join_room
 from dotenv import load_dotenv
+import stripe
 
 load_dotenv()
 
@@ -23,6 +24,17 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "cambia-esto-en-produccion")
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///app.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+# Stripe: procesa el pago con tarjeta cuando alguien compra tokens.
+stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
+STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY")
+
+# Paquetes de tokens disponibles para comprar. (id, nombre, tokens, precio en centavos de dólar)
+TOKEN_PACKAGES = [
+    {"id": "small", "name": "Paquete pequeño", "tokens": 100, "price_cents": 500},
+    {"id": "medium", "name": "Paquete medio", "tokens": 500, "price_cents": 2000},
+    {"id": "large", "name": "Paquete grande", "tokens": 1200, "price_cents": 4000},
+]
 
 # Render (y la mayoría de servicios de hosting) reciben la conexión segura (https)
 # en su propio servidor y la reenvían a la app como http normal. Sin esto, Flask
@@ -85,6 +97,10 @@ class User(UserMixin, db.Model):
     avatar_url = db.Column(db.String(500), nullable=True)  # foto de Google
     profile_photo = db.Column(db.String(255), nullable=True)  # foto subida por el usuario
     bio = db.Column(db.String(280), nullable=True)
+    # Todavía no está conectado a pagos reales; de momento es solo el número
+    # que se muestra en la pantalla de Inicio, para tener la parte visual
+    # lista antes de decidir cómo se compran/gastan los tokens de verdad.
+    tokens = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     @property
@@ -147,9 +163,88 @@ with app.app_context():
 @app.route("/")
 def index():
     if current_user.is_authenticated:
-        users = User.query.filter(User.id != current_user.id).order_by(User.name).all()
-        return render_template("dashboard.html", user=current_user, users=users)
+        return render_template("home.html", user=current_user)
     return redirect(url_for("login"))
+
+
+@app.route("/users")
+@login_required
+def users_list():
+    users = User.query.filter(User.id != current_user.id).order_by(User.name).all()
+    return render_template("dashboard.html", user=current_user, users=users)
+
+
+@app.route("/menu")
+@login_required
+def menu_page():
+    return render_template("menu.html", user=current_user)
+
+
+@app.route("/tokens/deposit")
+@login_required
+def tokens_deposit():
+    return render_template("tokens_deposit.html", packages=TOKEN_PACKAGES)
+
+
+@app.route("/tokens/checkout/<package_id>")
+@login_required
+def tokens_checkout(package_id):
+    package = next((p for p in TOKEN_PACKAGES if p["id"] == package_id), None)
+    if not package:
+        flash("Paquete no válido.", "error")
+        return redirect(url_for("tokens_deposit"))
+
+    checkout_session = stripe.checkout.Session.create(
+        mode="payment",
+        payment_method_types=["card"],
+        line_items=[{
+            "price_data": {
+                "currency": "usd",
+                "product_data": {"name": f"{package['tokens']} tokens · Conecta"},
+                "unit_amount": package["price_cents"],
+            },
+            "quantity": 1,
+        }],
+        metadata={"user_id": current_user.id, "tokens": package["tokens"]},
+        success_url=url_for("tokens_success", _external=True) + "?session_id={CHECKOUT_SESSION_ID}",
+        cancel_url=url_for("tokens_deposit", _external=True),
+    )
+    return redirect(checkout_session.url, code=303)
+
+
+@app.route("/tokens/success")
+@login_required
+def tokens_success():
+    session_id = request.args.get("session_id")
+    if not session_id:
+        return redirect(url_for("index"))
+
+    checkout_session = stripe.checkout.Session.retrieve(session_id)
+
+    if checkout_session.payment_status == "paid":
+        tokens_bought = int(checkout_session.metadata.get("tokens", 0))
+        paid_user_id = int(checkout_session.metadata.get("user_id", 0))
+
+        # Solo se acreditan los tokens si el pago es de la persona que tiene la
+        # sesión abierta ahora mismo, para evitar que alguien reutilice un
+        # enlace de otra persona.
+        if paid_user_id == current_user.id:
+            current_user.tokens = (current_user.tokens or 0) + tokens_bought
+            db.session.commit()
+            flash(f"¡Listo! Se añadieron {tokens_bought} tokens a tu cuenta.", "success")
+        else:
+            flash("Este pago no corresponde a tu cuenta.", "error")
+    else:
+        flash("El pago no se completó.", "error")
+
+    return redirect(url_for("index"))
+
+
+@app.route("/tokens/withdraw", methods=["GET", "POST"])
+@login_required
+def tokens_withdraw():
+    flash("La retirada de tokens todavía no está activada.", "error")
+    return redirect(url_for("index"))
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -449,4 +544,9 @@ def auth_google_callback():
 
 
 if __name__ == "__main__":
+    # use_reloader=False evita que Flask arranque el proceso dos veces al
+    # iniciar. En Windows, la segunda vez fallaba al no poder borrar/recrear
+    # la base de datos porque el primer proceso aún la tenía abierta.
+    # host="0.0.0.0" permite que otros dispositivos de tu misma red (móvil,
+    # otro ordenador) puedan entrar usando tu IP local, no solo 127.0.0.1.
     socketio.run(app, host="0.0.0.0", port=5000, debug=True, use_reloader=False)

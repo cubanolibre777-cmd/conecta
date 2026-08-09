@@ -55,9 +55,10 @@
     {% else %}
       <div class="empty">Aún no tienes conversaciones. Pulsa "Nuevo" para empezar a chatear.</div>
     {% endif %}
-
-    <div class="switch-link"><a href="{{ url_for('index') }}">Volver</a></div>
   </div>
+
+  {% set active_tab = 'chat' %}
+  {% include "_bottom_nav.html" %}
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
   {% include "_incoming_call.html" %}
 </body>

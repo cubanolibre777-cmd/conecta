@@ -113,6 +113,20 @@ authapp/
 - Funcionan bien en la mayoría de redes domésticas. En algunas redes con configuraciones de seguridad más estrictas (oficinas, universidades, ciertos routers), WebRTC puede necesitar un "servidor TURN" para conectar — algo que no está incluido todavía. Si algún usuario no logra conectar la llamada mientras otros sí, es la señal de que hace falta añadir uno (hay servicios gratuitos como el de Twilio o Metered para probar esto más adelante).
 - Pide permiso de cámara y micrófono la primera vez — el usuario debe aceptarlo en su navegador.
 
+## 12. Compra de tokens con Stripe
+
+1. Crea una cuenta en [stripe.com](https://stripe.com). Asegúrate de estar en **modo de prueba** (Test mode).
+2. Ve a Desarrolladores > Claves de API, y copia la "Clave publicable" (`pk_test_...`) y la "Clave secreta" (`sk_test_...`).
+3. En tu `.env`, rellena `STRIPE_SECRET_KEY` y `STRIPE_PUBLISHABLE_KEY` con esos valores.
+4. En Render, añade esas dos mismas variables de entorno cuando quieras probarlo en producción.
+5. Para probar un pago sin dinero real, usa la tarjeta de prueba `4242 4242 4242 4242`, cualquier fecha futura, cualquier CVC de 3 dígitos, y cualquier código postal.
+
+**Cómo funciona:** al pulsar "Depositar", el usuario elige un paquete de tokens y Stripe le muestra su propia pantalla de pago segura (nunca ves ni guardas el número de tarjeta de nadie en tu servidor). Al completar el pago, se le acreditan los tokens automáticamente.
+
+**Los paquetes de tokens** (cantidad y precio) se definen en `app.py`, en la lista `TOKEN_PACKAGES` — puedes cambiar los números ahí cuando quieras ajustar precios.
+
+**Cuando quieras cobrar de verdad** (no solo probar): en Stripe tendrás que completar la verificación de tu negocio (datos fiscales, cuenta bancaria) y cambiar las claves de prueba (`pk_test_`/`sk_test_`) por las claves reales (`pk_live_`/`sk_live_`) que Stripe te da tras esa verificación.
+
 ## 9. Notas sobre las fotos de perfil
 
 - Se guardan en `static/uploads/`, con el nombre `user_<id>.<extensión>`.

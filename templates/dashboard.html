@@ -6,7 +6,7 @@
   <title>Conecta</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
   <style>
-    body { display: block; padding-bottom: 78px; }
+    body { display: block; }
 
     .top-bar {
       display: flex; align-items: center; justify-content: center;
@@ -43,29 +43,6 @@
     }
     .user-card-links a:hover { text-decoration: underline; }
     .empty { color: var(--text-dim); font-size: 14px; text-align: center; padding: 60px 0; }
-
-    /* Barra inferior de navegación, estilo app */
-    .bottom-bar {
-      position: fixed; bottom: 0; left: 0; right: 0;
-      display: flex; justify-content: space-around; align-items: center;
-      background: var(--bg-panel); border-top: 1px solid #1D2138;
-      padding: 10px 8px calc(10px + env(safe-area-inset-bottom));
-      z-index: 10;
-    }
-    .bottom-bar a, .bottom-bar .bottom-item {
-      display: flex; flex-direction: column; align-items: center; gap: 4px;
-      color: var(--text-dim); text-decoration: none; font-size: 11px; font-weight: 600;
-      flex: 1; padding: 4px 0;
-    }
-    .bottom-bar a:hover, .bottom-bar a.active { color: var(--accent-soft); }
-    .bottom-bar svg { width: 22px; height: 22px; }
-    .bottom-bar .my-avatar-nav {
-      width: 22px; height: 22px; border-radius: 50%; object-fit: cover;
-    }
-    .bottom-bar .my-avatar-nav-fallback {
-      width: 22px; height: 22px; border-radius: 50%; background: var(--accent);
-      display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 10px;
-    }
   </style>
 </head>
 <body>
@@ -102,36 +79,8 @@
     {% endif %}
   </div>
 
-  <div class="bottom-bar">
-    <a href="{{ url_for('index') }}" class="active">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-      Personas
-    </a>
-    <a href="{{ url_for('messages_inbox') }}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.3 0-2.5-.3-3.6-.8L3 21l1.8-5.4A8.5 8.5 0 1 1 21 11.5z"/></svg>
-      Mensajes
-    </a>
-    <a href="#" style="opacity:0.4; pointer-events:none;">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-      Fotos
-    </a>
-    <a href="{{ url_for('messages_inbox') }}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
-      Llamadas
-    </a>
-    <a href="{{ url_for('profile') }}">
-      {% if user.display_photo %}
-        <img class="my-avatar-nav" src="{{ user.display_photo }}" alt="">
-      {% else %}
-        <span class="my-avatar-nav-fallback">{{ user.name[:1] if user.name else user.email[:1] }}</span>
-      {% endif %}
-      Mi perfil
-    </a>
-    <a href="{{ url_for('logout') }}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
-      Salir
-    </a>
-  </div>
+  {% set active_tab = 'usuarios' %}
+  {% include "_bottom_nav.html" %}
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
   {% include "_incoming_call.html" %}
 </body>

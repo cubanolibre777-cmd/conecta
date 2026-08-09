@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comprar tokens · Conecta</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+  <style>
+    body { display: block; }
+    .wrap { max-width: 420px; margin: 0 auto; padding: 28px 20px 20px; }
+    .back-link { color: var(--text-dim); text-decoration: none; font-size: 13.5px; display: inline-block; margin-bottom: 18px; }
+
+    .package-card {
+      display: flex; align-items: center; justify-content: space-between; gap: 14px;
+      padding: 18px; border: 1px solid #1D2138; border-radius: 14px; margin-bottom: 12px;
+      text-decoration: none; color: var(--text-main); transition: border-color .15s ease, background .15s ease;
+    }
+    .package-card:hover { border-color: var(--accent-soft); background: var(--bg-panel); }
+    .package-tokens { font-weight: 700; font-size: 17px; }
+    .package-sub { font-size: 12.5px; color: var(--text-dim); }
+    .package-price {
+      font-weight: 700; font-size: 16px; color: var(--pulse);
+      background: rgba(53,224,196,0.1); padding: 6px 14px; border-radius: 8px; white-space: nowrap;
+    }
+
+    .test-note {
+      font-size: 12.5px; color: var(--text-dim); text-align: center; margin-top: 20px;
+      border: 1px dashed #2A2E4A; border-radius: 10px; padding: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a href="{{ url_for('index') }}" class="back-link">← Volver</a>
+    <h2 style="margin-top:0;">Comprar tokens</h2>
+    <p style="color:var(--text-dim); font-size:14px; margin-top:-6px;">Elige un paquete para continuar al pago.</p>
+
+    {% for p in packages %}
+      <a href="{{ url_for('tokens_checkout', package_id=p.id) }}" class="package-card">
+        <div>
+          <div class="package-tokens">{{ p.tokens }} tokens</div>
+          <div class="package-sub">{{ p.name }}</div>
+        </div>
+        <div class="package-price">${{ "%.2f"|format(p.price_cents / 100) }}</div>
+      </a>
+    {% endfor %}
+
+    <div class="test-note">
+      Modo de prueba: usa la tarjeta 4242 4242 4242 4242, cualquier fecha futura y cualquier CVC para simular un pago exitoso.
+    </div>
+  </div>
+</body>
+</html>
