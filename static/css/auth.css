@@ -252,3 +252,17 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .brand-dot { animation: none; }
 }
+/* Mantener siempre el formato "teléfono", sin importar el tamaño de pantalla */
+.side-panel { display: none; }
+.form-panel { width: 100%; }
+
+body {
+  max-width: 480px;
+  margin: 0 auto;
+  border-left: 1px solid #23273F;
+  border-right: 1px solid #23273F;
+}
+
+html {
+  background: #000;
+}
