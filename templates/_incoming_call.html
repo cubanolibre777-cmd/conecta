@@ -1,0 +1,84 @@
+<style>
+  .incoming-call-banner {
+    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+    background: var(--bg-panel); border: 1px solid var(--accent); border-radius: 14px;
+    padding: 14px 18px; display: none; align-items: center; gap: 12px; z-index: 999;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4); max-width: 340px;
+  }
+  .incoming-call-banner img, .incoming-call-banner .avatar-fallback {
+    width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+  }
+  .incoming-call-banner .avatar-fallback {
+    background: var(--accent); display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+  }
+  .incoming-call-banner .info { font-size: 13.5px; }
+  .incoming-call-banner .info strong { display: block; font-size: 14px; }
+  .incoming-call-banner .btns { display: flex; gap: 6px; margin-left: auto; }
+  .incoming-call-banner button {
+    border: none; border-radius: 8px; padding: 7px 12px; font-size: 12.5px; font-weight: 600;
+    cursor: pointer; font-family: inherit;
+  }
+  .incoming-call-banner .accept { background: var(--pulse); color: #05060C; }
+  .incoming-call-banner .reject { background: var(--error); color: white; }
+</style>
+
+<div class="incoming-call-banner" id="incomingCallBanner">
+  <img id="incomingCallPhoto" style="display:none;" alt="">
+  <div class="avatar-fallback" id="incomingCallFallback"></div>
+  <div class="info">
+    <strong id="incomingCallName"></strong>
+    Videollamada entrante
+  </div>
+  <div class="btns">
+    <button class="accept" id="incomingCallAccept">Aceptar</button>
+    <button class="reject" id="incomingCallReject">Rechazar</button>
+  </div>
+</div>
+
+<script>
+  (function () {
+    if (window.__conectaGlobalSocket) return; // evita duplicar si ya está incluido
+    const socket = io();
+    window.__conectaGlobalSocket = socket;
+
+    const banner = document.getElementById("incomingCallBanner");
+    const photoImg = document.getElementById("incomingCallPhoto");
+    const fallback = document.getElementById("incomingCallFallback");
+    const nameEl = document.getElementById("incomingCallName");
+    const acceptBtn = document.getElementById("incomingCallAccept");
+    const rejectBtn = document.getElementById("incomingCallReject");
+
+    let currentCallerId = null;
+
+    socket.on("incoming_call", (data) => {
+      currentCallerId = data.from_id;
+      nameEl.textContent = data.from_name || "Alguien";
+
+      if (data.from_photo) {
+        photoImg.src = data.from_photo;
+        photoImg.style.display = "block";
+        fallback.style.display = "none";
+      } else {
+        fallback.textContent = (data.from_name || "?")[0].toUpperCase();
+        fallback.style.display = "flex";
+        photoImg.style.display = "none";
+      }
+
+      banner.style.display = "flex";
+    });
+
+    acceptBtn.addEventListener("click", () => {
+      if (!currentCallerId) return;
+      banner.style.display = "none";
+      window.location.href = "/call/" + currentCallerId + "?incoming=1";
+    });
+
+    rejectBtn.addEventListener("click", () => {
+      if (!currentCallerId) return;
+      socket.emit("call_response", { target_id: currentCallerId, accepted: false });
+      banner.style.display = "none";
+      currentCallerId = null;
+    });
+  })();
+</script>

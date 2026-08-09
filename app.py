@@ -11,6 +11,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from werkzeug.middleware.proxy_fix import ProxyFix
 from authlib.integrations.flask_client import OAuth
+from flask_socketio import SocketIO, emit, join_room
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -34,6 +35,14 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 # Ajustes de la cookie de sesión: SameSite=Lax permite que la cookie sobreviva
 # la redirección de vuelta desde Google.
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+
+# Socket.IO: es el "cartero" que conecta a dos personas para que puedan
+# ponerse de acuerdo y empezar una videollamada (WebRTC). El video y audio
+# de la llamada en sí NO pasan por aquí, van directos entre los dos
+# navegadores; esto solo sirve para el "apretón de manos" inicial.
+# async_mode="threading" funciona con el mismo servidor (gunicorn) que ya
+# usas, sin necesitar configuración extra en Render.
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
 
 # Subida de fotos de perfil
 UPLOAD_FOLDER = os.path.join(app.root_path, "static", "uploads")
@@ -324,6 +333,87 @@ def logout():
 
 
 # ---------------------------------------------------------------------------
+# Videollamadas (WebRTC + Socket.IO para la señalización)
+# ---------------------------------------------------------------------------
+@app.route("/call/<int:user_id>")
+@login_required
+def call_page(user_id):
+    other = User.query.get_or_404(user_id)
+    if other.id == current_user.id:
+        flash("No puedes llamarte a ti mismo.", "error")
+        return redirect(url_for("index"))
+    return render_template("call.html", other=other)
+
+
+@socketio.on("connect")
+def on_connect():
+    # Cada usuario tiene su propia "sala" (con su id), así podemos enviarle
+    # mensajes de señalización directamente sin que otros los vean.
+    if current_user.is_authenticated:
+        join_room(str(current_user.id))
+
+
+@socketio.on("call_request")
+def on_call_request(data):
+    if not current_user.is_authenticated:
+        return
+    target_id = str(data.get("target_id"))
+    emit(
+        "incoming_call",
+        {
+            "from_id": current_user.id,
+            "from_name": current_user.name or current_user.email,
+            "from_photo": current_user.display_photo,
+        },
+        to=target_id,
+    )
+
+
+@socketio.on("call_response")
+def on_call_response(data):
+    if not current_user.is_authenticated:
+        return
+    target_id = str(data.get("target_id"))
+    emit(
+        "call_response",
+        {"accepted": data.get("accepted", False), "from_id": current_user.id},
+        to=target_id,
+    )
+
+
+@socketio.on("webrtc_offer")
+def on_webrtc_offer(data):
+    if not current_user.is_authenticated:
+        return
+    target_id = str(data.get("target_id"))
+    emit("webrtc_offer", {"sdp": data.get("sdp"), "from_id": current_user.id}, to=target_id)
+
+
+@socketio.on("webrtc_answer")
+def on_webrtc_answer(data):
+    if not current_user.is_authenticated:
+        return
+    target_id = str(data.get("target_id"))
+    emit("webrtc_answer", {"sdp": data.get("sdp"), "from_id": current_user.id}, to=target_id)
+
+
+@socketio.on("ice_candidate")
+def on_ice_candidate(data):
+    if not current_user.is_authenticated:
+        return
+    target_id = str(data.get("target_id"))
+    emit("ice_candidate", {"candidate": data.get("candidate"), "from_id": current_user.id}, to=target_id)
+
+
+@socketio.on("call_end")
+def on_call_end(data):
+    if not current_user.is_authenticated:
+        return
+    target_id = str(data.get("target_id"))
+    emit("call_end", {"from_id": current_user.id}, to=target_id)
+
+
+# ---------------------------------------------------------------------------
 # Rutas: Google OAuth
 # ---------------------------------------------------------------------------
 @app.route("/auth/google")
@@ -359,4 +449,4 @@ def auth_google_callback():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    socketio.run(app, host="0.0.0.0", port=5000, debug=True, use_reloader=False)

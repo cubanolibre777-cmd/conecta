@@ -55,7 +55,10 @@
     {% else %}
       <div class="chat-avatar-fallback">{{ other.name[:1] if other.name else other.email[:1] }}</div>
     {% endif %}
-    <strong>{{ other.name or other.email }}</strong>
+    <strong style="flex:1;">{{ other.name or other.email }}</strong>
+    <a href="{{ url_for('call_page', user_id=other.id) }}" title="Videollamada" style="color: var(--accent-soft); display:flex;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+    </a>
   </div>
 
   <div class="chat-body" id="chatBody">
@@ -73,9 +76,11 @@
     <button type="submit">Enviar</button>
   </form>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
   <script>
     const chatBody = document.getElementById('chatBody');
     chatBody.scrollTop = chatBody.scrollHeight;
   </script>
+  {% include "_incoming_call.html" %}
 </body>
 </html>

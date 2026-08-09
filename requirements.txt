@@ -6,3 +6,7 @@ python-dotenv==1.0.1
 Werkzeug==3.0.4
 requests==2.32.3
 gunicorn==22.0.0
+flask-socketio==5.3.6
+python-socketio==5.11.2
+python-engineio==4.9.1
+simple-websocket==1.0.0

@@ -84,12 +84,13 @@ authapp/
 - Perfil de usuario: nombre, bio (hasta 280 caracteres) y foto subida por el usuario (`/profile` para verlo, `/profile/edit` para editarlo).
 - Si el usuario entró con Google y no ha subido su propia foto, se usa la foto de su cuenta de Google automáticamente.
 - Mensajería entre usuarios: bandeja de entrada (`/messages`), elegir con quién chatear (`/messages/new`) y conversación 1 a 1 (`/messages/<id>`).
+- Videollamadas 1 a 1 con WebRTC (`/call/<id>`): se inician desde el chat o desde el perfil de otra persona. Mientras usas la app (dashboard, mensajes, perfil), si alguien te llama aparece una notificación flotante para aceptar o rechazar.
 
 ## 8. Próximos pasos sugeridos
 
-1. Sustituir `dashboard.html` por el feed real de la red social.
-2. Videollamadas con WebRTC: necesitarás un servidor de señalización (puedes usar `Flask-SocketIO`) y, para producción, un servidor TURN (ej. `coturn`).
-3. Pagos con Stripe antes de permitir iniciar una llamada.
+1. Sustituir `dashboard.html` por el feed real de la red social (fotos).
+2. Pagos con Stripe antes de permitir iniciar una llamada.
+3. Guardar un historial de llamadas (quién llamó a quién y cuándo).
 
 ## 9. Nota sobre los mensajes
 
@@ -105,6 +106,12 @@ authapp/
 6. Cuando tengas tu URL pública (ej. `https://conecta.onrender.com`), añádela como nueva URI de redirección en Google Cloud Console: `https://conecta.onrender.com/auth/google/callback`
 
 **Aviso:** en el plan gratuito de Render, el almacenamiento no es permanente — la base de datos y las fotos subidas se pueden borrar cuando el servidor se reinicia. Es perfecto para probar la app con otras personas, pero antes de un lanzamiento real conviene pasar a una base de datos externa (por ejemplo, Postgres, que Render también ofrece gratis) y a un almacenamiento de fotos externo (Amazon S3 o Cloudinary).
+
+## 11. Notas sobre las videollamadas
+
+- Funcionan navegador a navegador (WebRTC): el vídeo y el audio no pasan por tu servidor, solo la "señalización" inicial (ponerse de acuerdo para conectar).
+- Funcionan bien en la mayoría de redes domésticas. En algunas redes con configuraciones de seguridad más estrictas (oficinas, universidades, ciertos routers), WebRTC puede necesitar un "servidor TURN" para conectar — algo que no está incluido todavía. Si algún usuario no logra conectar la llamada mientras otros sí, es la señal de que hace falta añadir uno (hay servicios gratuitos como el de Twilio o Metered para probar esto más adelante).
+- Pide permiso de cámara y micrófono la primera vez — el usuario debe aceptarlo en su navegador.
 
 ## 9. Notas sobre las fotos de perfil
 

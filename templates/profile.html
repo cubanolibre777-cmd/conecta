@@ -44,9 +44,12 @@
         <a href="{{ url_for('profile_edit') }}" class="btn-google" style="width:auto; padding:10px 22px;">Editar perfil</a>
       {% else %}
         <a href="{{ url_for('messages_chat', user_id=user.id) }}" class="btn-google" style="width:auto; padding:10px 22px;">Enviar mensaje</a>
+        <a href="{{ url_for('call_page', user_id=user.id) }}" class="btn-google" style="width:auto; padding:10px 22px;">Videollamada</a>
       {% endif %}
       <a href="{{ url_for('index') }}" class="btn-google" style="width:auto; padding:10px 22px;">Volver</a>
     </div>
   </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
+  {% include "_incoming_call.html" %}
 </body>
 </html>
