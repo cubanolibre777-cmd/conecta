@@ -5,28 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Editar perfil · Conecta</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <meta name="theme-color" content="#0B0E1A">
   <style>
-    .center-box {
-      width: 100%; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px;
-    }
+    .center-box { width: 100%; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
     .edit-card { width: 100%; max-width: 380px; }
-    .avatar-preview {
-      width: 84px; height: 84px; border-radius: 50%; object-fit: cover;
-      border: 2px solid var(--accent); display: block; margin: 0 auto 18px;
-    }
+    .avatar-preview { width: 84px; height: 84px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); display: block; margin: 0 auto 18px; }
     .avatar-preview-fallback {
       width: 84px; height: 84px; border-radius: 50%; background: var(--accent);
-      display: flex; align-items: center; justify-content: center; font-weight: 700;
-      font-size: 28px; margin: 0 auto 18px;
+      display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 28px; margin: 0 auto 18px;
     }
     textarea {
       width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid #2A2E4A;
-      background: var(--bg-panel); color: var(--text-main); font-size: 14.5px;
-      font-family: inherit; resize: vertical; min-height: 80px;
+      background: var(--bg-panel); color: var(--text-main); font-size: 14.5px; font-family: inherit; resize: vertical; min-height: 80px;
     }
     textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(108,92,231,0.25); }
     .char-count { font-size: 12px; color: var(--text-dim); text-align: right; margin-top: 4px; }
-    .flash.success { background: rgba(53,224,196,0.12); color: var(--pulse); border: 1px solid rgba(53,224,196,0.3); }
     input[type="file"] {
       width: 100%; font-size: 13px; color: var(--text-dim);
       padding: 10px; border: 1px dashed #2A2E4A; border-radius: 10px; background: var(--bg-panel);
@@ -57,25 +51,22 @@
           <label for="name">Nombre</label>
           <input type="text" id="name" name="name" value="{{ user.name or '' }}" required>
         </div>
-
         <div class="field">
           <label for="bio">Bio</label>
           <textarea id="bio" name="bio" maxlength="280">{{ user.bio or '' }}</textarea>
           <div class="char-count">Máx. 280 caracteres</div>
         </div>
-
         <div class="field">
           <label for="photo">Foto de perfil</label>
           <input type="file" id="photo" name="photo" accept=".png,.jpg,.jpeg,.webp">
         </div>
-
         <button type="submit" class="btn-primary">Guardar cambios</button>
       </form>
 
-      <div class="switch-link">
-        <a href="{{ url_for('profile') }}">Cancelar</a>
-      </div>
+      <div class="switch-link"><a href="{{ url_for('profile') }}">Cancelar</a></div>
     </div>
   </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
+  {% include "_incoming_call.html" %}
 </body>
 </html>

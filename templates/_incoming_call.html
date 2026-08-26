@@ -1,29 +1,40 @@
+<script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/static/service-worker.js");
+  }
+</script>
+
 <style>
-  .incoming-call-banner {
+  .top-toast {
     position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
     background: var(--bg-panel); border: 1px solid var(--accent); border-radius: 14px;
     padding: 14px 18px; display: none; align-items: center; gap: 12px; z-index: 999;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.4); max-width: 340px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4); max-width: 340px; width: calc(100% - 40px);
+    text-decoration: none; color: var(--text-main);
   }
-  .incoming-call-banner img, .incoming-call-banner .avatar-fallback {
+  .top-toast img, .top-toast .avatar-fallback {
     width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
   }
-  .incoming-call-banner .avatar-fallback {
+  .top-toast .avatar-fallback {
     background: var(--accent); display: flex; align-items: center; justify-content: center;
-    font-weight: 700;
+    font-weight: 700; color: white;
   }
-  .incoming-call-banner .info { font-size: 13.5px; }
-  .incoming-call-banner .info strong { display: block; font-size: 14px; }
-  .incoming-call-banner .btns { display: flex; gap: 6px; margin-left: auto; }
-  .incoming-call-banner button {
+  .top-toast .info { font-size: 13.5px; min-width: 0; }
+  .top-toast .info strong { display: block; font-size: 14px; }
+  .top-toast .info .preview {
+    color: var(--text-dim); font-size: 12.5px; white-space: nowrap; overflow: hidden;
+    text-overflow: ellipsis; display: block; max-width: 190px;
+  }
+  .top-toast .btns { display: flex; gap: 6px; margin-left: auto; flex-shrink: 0; }
+  .top-toast button {
     border: none; border-radius: 8px; padding: 7px 12px; font-size: 12.5px; font-weight: 600;
     cursor: pointer; font-family: inherit;
   }
-  .incoming-call-banner .accept { background: var(--pulse); color: #05060C; }
-  .incoming-call-banner .reject { background: var(--error); color: white; }
+  .top-toast .accept { background: var(--pulse); color: #05060C; }
+  .top-toast .reject { background: var(--error); color: white; }
 </style>
 
-<div class="incoming-call-banner" id="incomingCallBanner">
+<div class="top-toast" id="incomingCallBanner">
   <img id="incomingCallPhoto" style="display:none;" alt="">
   <div class="avatar-fallback" id="incomingCallFallback"></div>
   <div class="info">
@@ -36,19 +47,28 @@
   </div>
 </div>
 
+<a href="#" class="top-toast" id="messageToast">
+  <img id="messageToastPhoto" style="display:none;" alt="">
+  <div class="avatar-fallback" id="messageToastFallback"></div>
+  <div class="info">
+    <strong id="messageToastName"></strong>
+    <span class="preview" id="messageToastPreview"></span>
+  </div>
+</a>
+
 <script>
   (function () {
-    if (window.__conectaGlobalSocket) return; // evita duplicar si ya está incluido
+    if (window.__conectaGlobalSocket) return;
     const socket = io();
     window.__conectaGlobalSocket = socket;
 
+    // --- Llamada entrante ---
     const banner = document.getElementById("incomingCallBanner");
     const photoImg = document.getElementById("incomingCallPhoto");
     const fallback = document.getElementById("incomingCallFallback");
     const nameEl = document.getElementById("incomingCallName");
     const acceptBtn = document.getElementById("incomingCallAccept");
     const rejectBtn = document.getElementById("incomingCallReject");
-
     let currentCallerId = null;
 
     socket.on("incoming_call", (data) => {
@@ -64,8 +84,8 @@
         fallback.style.display = "flex";
         photoImg.style.display = "none";
       }
-
       banner.style.display = "flex";
+      bumpChatBadge();
     });
 
     acceptBtn.addEventListener("click", () => {
@@ -80,5 +100,49 @@
       banner.style.display = "none";
       currentCallerId = null;
     });
+
+    // --- Mensaje nuevo ---
+    const msgToast = document.getElementById("messageToast");
+    const msgPhoto = document.getElementById("messageToastPhoto");
+    const msgFallback = document.getElementById("messageToastFallback");
+    const msgName = document.getElementById("messageToastName");
+    const msgPreview = document.getElementById("messageToastPreview");
+    let msgToastTimer = null;
+
+    socket.on("new_message", (data) => {
+      // Si ya estás viendo esa conversación, no hace falta molestarte con el aviso.
+      if (window.location.pathname === "/messages/" + data.from_id) {
+        return;
+      }
+
+      msgName.textContent = data.from_name || "Alguien";
+      msgPreview.textContent = data.content || "";
+      msgToast.href = "/messages/" + data.from_id;
+
+      if (data.from_photo) {
+        msgPhoto.src = data.from_photo;
+        msgPhoto.style.display = "block";
+        msgFallback.style.display = "none";
+      } else {
+        msgFallback.textContent = (data.from_name || "?")[0].toUpperCase();
+        msgFallback.style.display = "flex";
+        msgPhoto.style.display = "none";
+      }
+
+      msgToast.style.display = "flex";
+      clearTimeout(msgToastTimer);
+      msgToastTimer = setTimeout(() => { msgToast.style.display = "none"; }, 5000);
+
+      bumpChatBadge();
+    });
+
+    function bumpChatBadge() {
+      const badge = document.getElementById("navChatBadge");
+      if (!badge) return;
+      const current = parseInt(badge.textContent) || 0;
+      const next = current + 1;
+      badge.textContent = next > 9 ? "9+" : next;
+      badge.style.display = "flex";
+    }
   })();
 </script>

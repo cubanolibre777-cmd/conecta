@@ -5,11 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Comprar tokens · Conecta</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <meta name="theme-color" content="#0B0E1A">
   <style>
     body { display: block; }
     .wrap { max-width: 420px; margin: 0 auto; padding: 28px 20px 20px; }
     .back-link { color: var(--text-dim); text-decoration: none; font-size: 13.5px; display: inline-block; margin-bottom: 18px; }
-
     .package-card {
       display: flex; align-items: center; justify-content: space-between; gap: 14px;
       padding: 18px; border: 1px solid #1D2138; border-radius: 14px; margin-bottom: 12px;
@@ -22,7 +23,6 @@
       font-weight: 700; font-size: 16px; color: var(--pulse);
       background: rgba(53,224,196,0.1); padding: 6px 14px; border-radius: 8px; white-space: nowrap;
     }
-
     .test-note {
       font-size: 12.5px; color: var(--text-dim); text-align: center; margin-top: 20px;
       border: 1px dashed #2A2E4A; border-radius: 10px; padding: 12px;
@@ -49,5 +49,7 @@
       Modo de prueba: usa la tarjeta 4242 4242 4242 4242, cualquier fecha futura y cualquier CVC para simular un pago exitoso.
     </div>
   </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
+  {% include "_incoming_call.html" %}
 </body>
 </html>

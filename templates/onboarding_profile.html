@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tu perfil · Conecta</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+  <style>
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .wrap { width: 100%; max-width: 380px; padding: 24px; }
+
+    .avatar-picker { display: flex; justify-content: center; margin-bottom: 30px; }
+    .avatar-picker-inner { position: relative; width: 96px; height: 96px; }
+    .avatar-preview {
+      width: 96px; height: 96px; border-radius: 50%; object-fit: cover;
+      border: 2px solid #2A2E4A; background: var(--bg-panel);
+    }
+    .avatar-preview-fallback {
+      width: 96px; height: 96px; border-radius: 50%; background: var(--bg-panel);
+      border: 2px solid #2A2E4A; display: flex; align-items: center; justify-content: center;
+      color: var(--text-dim);
+    }
+    .avatar-add-btn {
+      position: absolute; bottom: 0; right: 0; width: 32px; height: 32px; border-radius: 50%;
+      background: var(--accent); border: 3px solid var(--bg-deep); display: flex;
+      align-items: center; justify-content: center; cursor: pointer; color: white;
+    }
+    .avatar-add-btn svg { width: 15px; height: 15px; }
+    #photoInput { display: none; }
+
+    .flash { padding: 11px 14px; border-radius: 10px; font-size: 13.5px; margin-bottom: 18px; }
+    .flash.error { background: rgba(255,107,129,0.12); color: var(--error); border: 1px solid rgba(255,107,129,0.3); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" enctype="multipart/form-data">
+      <label class="avatar-picker" for="photoInput">
+        <div class="avatar-picker-inner">
+          <img class="avatar-preview" id="avatarPreview" style="display:none;" alt="">
+          <div class="avatar-preview-fallback" id="avatarFallback">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+          </div>
+          <div class="avatar-add-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          </div>
+        </div>
+      </label>
+      <input type="file" id="photoInput" name="photo" accept=".png,.jpg,.jpeg,.webp">
+
+      <div class="field">
+        <label for="name">Nombre a mostrar</label>
+        <input type="text" id="name" name="name" required autocomplete="off">
+      </div>
+
+      <div class="field">
+        <label for="birthdate">Fecha de nacimiento</label>
+        <input type="date" id="birthdate" name="birthdate" required>
+      </div>
+
+      <button type="submit" class="btn-primary">Inicio</button>
+    </form>
+  </div>
+
+  <script>
+    const photoInput = document.getElementById("photoInput");
+    const avatarPreview = document.getElementById("avatarPreview");
+    const avatarFallback = document.getElementById("avatarFallback");
+
+    photoInput.addEventListener("change", () => {
+      const file = photoInput.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        avatarPreview.src = e.target.result;
+        avatarPreview.style.display = "block";
+        avatarFallback.style.display = "none";
+      };
+      reader.readAsDataURL(file);
+    });
+  </script>
+</body>
+</html>

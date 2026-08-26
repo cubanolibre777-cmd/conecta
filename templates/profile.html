@@ -3,17 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mi perfil · Conecta</title>
+  <title>Perfil · Conecta</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <meta name="theme-color" content="#0B0E1A">
   <style>
     .center-box {
       width: 100%; min-height: 100vh; display: flex; flex-direction: column;
       align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 24px;
     }
-    .avatar-lg {
-      width: 96px; height: 96px; border-radius: 50%; object-fit: cover;
-      border: 2px solid var(--accent);
-    }
+    .avatar-lg { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); }
     .avatar-lg-fallback {
       width: 96px; height: 96px; border-radius: 50%; background: var(--accent);
       display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 32px;
@@ -36,7 +35,7 @@
     {% if user.bio %}
       <p class="bio-text">{{ user.bio }}</p>
     {% else %}
-      <p class="bio-text">Aún no has añadido una bio.</p>
+      <p class="bio-text">Aún no ha añadido una bio.</p>
     {% endif %}
 
     <div class="actions">

@@ -5,55 +5,90 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mensajes · Conecta</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <meta name="theme-color" content="#0B0E1A">
   <style>
     body { display: block; }
-    .wrap { max-width: 480px; margin: 0 auto; padding: 40px 20px; }
-    .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
-    .top-row h2 { margin: 0; }
+    .top-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 18px 20px 10px; position: sticky; top: 0; background: var(--bg-deep); z-index: 5;
+    }
+    .top-row h2 { margin: 0; font-size: 21px; }
+    .new-btn {
+      width: 38px; height: 38px; border-radius: 50%; background: var(--accent); color: white;
+      display: flex; align-items: center; justify-content: center; text-decoration: none;
+    }
+    .new-btn:hover { background: #7C6CF7; }
+
+    .wrap { max-width: 480px; margin: 0 auto; padding: 4px 12px 20px; }
+
     .conv {
-      display: flex; align-items: center; gap: 12px; padding: 14px;
-      border-radius: 12px; text-decoration: none; color: var(--text-main);
-      border: 1px solid #1D2138; margin-bottom: 10px; transition: border-color .15s ease, background .15s ease;
+      display: flex; align-items: center; gap: 12px; padding: 12px;
+      border-radius: 14px; text-decoration: none; color: var(--text-main);
+      margin-bottom: 4px; transition: background .15s ease;
     }
-    .conv:hover { border-color: var(--accent-soft); background: var(--bg-panel); }
-    .conv-avatar {
-      width: 44px; height: 44px; border-radius: 50%; object-fit: cover; flex-shrink: 0;
-    }
+    .conv:hover, .conv:active { background: var(--bg-panel); }
+    .conv-avatar-wrap { position: relative; flex-shrink: 0; }
+    .conv-avatar { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
     .conv-avatar-fallback {
-      width: 44px; height: 44px; border-radius: 50%; background: var(--accent);
-      display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;
+      width: 50px; height: 50px; border-radius: 50%; background: var(--accent);
+      display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 17px;
     }
-    .conv-info { min-width: 0; }
+    .conv-info { min-width: 0; flex: 1; }
+    .conv-top-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
     .conv-name { font-weight: 600; font-size: 14.5px; }
+    .conv-name.unread { font-weight: 700; }
+    .conv-time { font-size: 11.5px; color: var(--text-dim); flex-shrink: 0; }
+    .conv-bottom-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 2px; }
     .conv-preview {
       color: var(--text-dim); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .empty { color: var(--text-dim); font-size: 14px; text-align: center; padding: 40px 0; }
+    .conv-preview.unread { color: var(--text-main); font-weight: 500; }
+    .conv-unread-badge {
+      flex-shrink: 0; min-width: 20px; height: 20px; border-radius: 999px; background: var(--accent);
+      color: white; font-size: 11px; font-weight: 700; display: flex; align-items: center;
+      justify-content: center; padding: 0 6px;
+    }
+    .empty { color: var(--text-dim); font-size: 14px; text-align: center; padding: 70px 20px; }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="top-row">
-      <h2>Mensajes</h2>
-      <a href="{{ url_for('messages_new') }}" class="btn-primary" style="width:auto; padding:9px 18px;">Nuevo</a>
-    </div>
+  <div class="top-row">
+    <h2>Mensajes</h2>
+    <a href="{{ url_for('messages_new') }}" class="new-btn" title="Nuevo mensaje">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+    </a>
+  </div>
 
+  <div class="wrap">
     {% if conversations %}
-      {% for other, last_message in conversations %}
+      {% for other, last_message, unread_count in conversations %}
         <a href="{{ url_for('messages_chat', user_id=other.id) }}" class="conv">
-          {% if other.display_photo %}
-            <img class="conv-avatar" src="{{ other.display_photo }}" alt="">
-          {% else %}
-            <div class="conv-avatar-fallback">{{ other.name[:1] if other.name else other.email[:1] }}</div>
-          {% endif %}
+          <div class="conv-avatar-wrap">
+            {% if other.display_photo %}
+              <img class="conv-avatar" src="{{ other.display_photo }}" alt="">
+            {% else %}
+              <div class="conv-avatar-fallback">{{ other.name[:1] if other.name else other.email[:1] }}</div>
+            {% endif %}
+          </div>
           <div class="conv-info">
-            <div class="conv-name">{{ other.name or other.email }}</div>
-            <div class="conv-preview">{{ last_message.content if last_message else "" }}</div>
+            <div class="conv-top-row">
+              <span class="conv-name {{ 'unread' if unread_count > 0 else '' }}">{{ other.name or other.email }}</span>
+              {% if last_message %}
+                <span class="conv-time">{{ last_message.created_at.strftime('%H:%M') }}</span>
+              {% endif %}
+            </div>
+            <div class="conv-bottom-row">
+              <span class="conv-preview {{ 'unread' if unread_count > 0 else '' }}">{{ last_message.content if last_message else "" }}</span>
+              {% if unread_count > 0 %}
+                <span class="conv-unread-badge">{{ '9+' if unread_count > 9 else unread_count }}</span>
+              {% endif %}
+            </div>
           </div>
         </a>
       {% endfor %}
     {% else %}
-      <div class="empty">Aún no tienes conversaciones. Pulsa "Nuevo" para empezar a chatear.</div>
+      <div class="empty">Aún no tienes conversaciones.<br>Pulsa el botón "+" para empezar a chatear.</div>
     {% endif %}
   </div>
 

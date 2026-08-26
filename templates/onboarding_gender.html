@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Género · Conecta</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+  <style>
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .wrap { width: 100%; max-width: 380px; padding: 24px; text-align: center; }
+    .field-label {
+      display: block; font-size: 13px; color: var(--text-dim); text-transform: uppercase;
+      letter-spacing: 0.06em; margin-bottom: 22px;
+    }
+    .gender-options { display: flex; gap: 16px; justify-content: center; margin-bottom: 32px; }
+    .gender-option {
+      flex: 1; max-width: 140px; padding: 28px 12px; border-radius: 16px;
+      border: 1.5px solid #2A2E4A; background: var(--bg-panel); cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+      transition: border-color .15s ease, background .15s ease;
+    }
+    .gender-option svg { width: 34px; height: 34px; color: var(--text-dim); transition: color .15s ease; }
+    .gender-option span { font-size: 13.5px; font-weight: 600; color: var(--text-dim); }
+    .gender-option:hover { border-color: var(--accent-soft); }
+    .gender-option.selected { border-color: var(--accent); background: rgba(108,92,231,0.1); }
+    .gender-option.selected svg,
+    .gender-option.selected span { color: var(--accent-soft); }
+    .flash { padding: 11px 14px; border-radius: 10px; font-size: 13.5px; margin-bottom: 18px; }
+    .flash.error { background: rgba(255,107,129,0.12); color: var(--error); border: 1px solid rgba(255,107,129,0.3); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <span class="field-label">Género</span>
+
+    <form method="POST" id="genderForm">
+      <input type="hidden" name="gender" id="genderInput" value="">
+
+      <div class="gender-options">
+        <div class="gender-option" data-value="masculino">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10" cy="14" r="6"/><path d="M14.5 9.5L21 3M21 3h-5M21 3v5"/></svg>
+          <span>Masculino</span>
+        </div>
+        <div class="gender-option" data-value="femenino">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="9" r="6"/><path d="M12 15v7M9 19h6"/></svg>
+          <span>Femenino</span>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary">Próximo</button>
+    </form>
+  </div>
+
+  <script>
+    const options = document.querySelectorAll(".gender-option");
+    const genderInput = document.getElementById("genderInput");
+
+    options.forEach(opt => {
+      opt.addEventListener("click", () => {
+        options.forEach(o => o.classList.remove("selected"));
+        opt.classList.add("selected");
+        genderInput.value = opt.dataset.value;
+      });
+    });
+  </script>
+</body>
+</html>

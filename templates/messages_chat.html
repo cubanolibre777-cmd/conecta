@@ -5,66 +5,82 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ other.name or other.email }} · Conecta</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <meta name="theme-color" content="#0B0E1A">
   <style>
-    body { display: flex; flex-direction: column; height: 100vh; margin: 0; }
+    body { display: flex; flex-direction: column; height: 100vh; max-width: 480px; margin: 0 auto; padding-bottom: 0; border-left: 1px solid #23273F; border-right: 1px solid #23273F; }
     .chat-header {
-      display: flex; align-items: center; gap: 12px; padding: 16px 20px;
-      border-bottom: 1px solid #1D2138; flex-shrink: 0;
+      display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+      border-bottom: 1px solid #1D2138; flex-shrink: 0; background: var(--bg-deep); z-index: 5;
     }
-    .chat-header a { color: var(--text-dim); text-decoration: none; font-size: 20px; margin-right: 4px; }
-    .chat-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
+    .chat-header a.back { color: var(--text-dim); text-decoration: none; display: flex; }
+    .chat-avatar { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; }
     .chat-avatar-fallback {
-      width: 36px; height: 36px; border-radius: 50%; background: var(--accent);
+      width: 38px; height: 38px; border-radius: 50%; background: var(--accent);
       display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;
     }
-    .chat-body {
-      flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 8px;
+    .chat-header-name { font-weight: 700; font-size: 14.5px; }
+    .chat-header-sub { font-size: 11.5px; color: var(--text-dim); }
+    .call-icon-btn {
+      color: var(--accent-soft); display: flex; padding: 8px; border-radius: 50%; text-decoration: none;
     }
-    .bubble {
-      max-width: 70%; padding: 10px 14px; border-radius: 16px; font-size: 14.5px; line-height: 1.45;
-      word-wrap: break-word;
-    }
-    .bubble.mine {
-      align-self: flex-end; background: var(--accent); color: white; border-bottom-right-radius: 4px;
-    }
-    .bubble.theirs {
-      align-self: flex-start; background: var(--bg-panel); border: 1px solid #1D2138; border-bottom-left-radius: 4px;
-    }
+    .call-icon-btn:hover { background: var(--bg-panel); }
+
+    .chat-body { flex: 1; overflow-y: auto; padding: 18px 16px 10px; display: flex; flex-direction: column; gap: 4px; }
+    .bubble-row { display: flex; flex-direction: column; max-width: 74%; margin-bottom: 6px; }
+    .bubble-row.mine { align-self: flex-end; align-items: flex-end; }
+    .bubble-row.theirs { align-self: flex-start; align-items: flex-start; }
+    .bubble { padding: 10px 14px; border-radius: 18px; font-size: 14.5px; line-height: 1.45; word-wrap: break-word; }
+    .bubble-row.mine .bubble { background: var(--accent); color: white; border-bottom-right-radius: 5px; }
+    .bubble-row.theirs .bubble { background: var(--bg-panel); border: 1px solid #1D2138; border-bottom-left-radius: 5px; }
+    .bubble-time { font-size: 10.5px; color: var(--text-dim); margin-top: 3px; padding: 0 4px; }
+
     .empty { color: var(--text-dim); font-size: 14px; text-align: center; margin: auto; }
+
     .chat-form {
-      display: flex; gap: 10px; padding: 16px 20px; border-top: 1px solid #1D2138; flex-shrink: 0;
+      display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+      border-top: 1px solid #1D2138; flex-shrink: 0;
+      padding-bottom: calc(12px + env(safe-area-inset-bottom));
     }
     .chat-form input[type="text"] {
-      flex: 1; padding: 12px 14px; border-radius: 10px; border: 1px solid #2A2E4A;
+      flex: 1; padding: 12px 16px; border-radius: 999px; border: 1px solid #2A2E4A;
       background: var(--bg-panel); color: var(--text-main); font-size: 14.5px; font-family: inherit;
     }
-    .chat-form input[type="text"]:focus {
-      outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(108,92,231,0.25);
+    .chat-form input[type="text"]:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(108,92,231,0.25); }
+    .send-btn {
+      width: 42px; height: 42px; border-radius: 50%; border: none; background: var(--accent);
+      color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
     }
-    .chat-form button {
-      padding: 0 22px; border-radius: 10px; border: none; background: var(--accent);
-      color: white; font-weight: 600; cursor: pointer; font-family: inherit;
-    }
+    .send-btn:hover { background: #7C6CF7; }
+    .send-btn svg { width: 18px; height: 18px; }
   </style>
 </head>
 <body>
   <div class="chat-header">
-    <a href="{{ url_for('messages_inbox') }}">←</a>
+    <a href="{{ url_for('messages_inbox') }}" class="back">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    </a>
     {% if other.display_photo %}
       <img class="chat-avatar" src="{{ other.display_photo }}" alt="">
     {% else %}
       <div class="chat-avatar-fallback">{{ other.name[:1] if other.name else other.email[:1] }}</div>
     {% endif %}
-    <strong style="flex:1;">{{ other.name or other.email }}</strong>
-    <a href="{{ url_for('call_page', user_id=other.id) }}" title="Videollamada" style="color: var(--accent-soft); display:flex;">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+    <div style="flex:1; min-width:0;">
+      <div class="chat-header-name">{{ other.name or other.email }}</div>
+      {% if other.is_online %}<div class="chat-header-sub">En línea</div>{% endif %}
+    </div>
+    <a href="{{ url_for('call_page', user_id=other.id) }}" class="call-icon-btn" title="Videollamada">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
     </a>
   </div>
 
   <div class="chat-body" id="chatBody">
     {% if messages %}
       {% for m in messages %}
-        <div class="bubble {{ 'mine' if m.sender_id == current_user.id else 'theirs' }}">{{ m.content }}</div>
+        <div class="bubble-row {{ 'mine' if m.sender_id == current_user.id else 'theirs' }}">
+          <div class="bubble">{{ m.content }}</div>
+          <div class="bubble-time">{{ m.created_at.strftime('%H:%M') }}</div>
+        </div>
       {% endfor %}
     {% else %}
       <div class="empty">Empieza la conversación con {{ other.name or other.email }}.</div>
@@ -73,13 +89,43 @@
 
   <form class="chat-form" method="POST">
     <input type="text" name="content" placeholder="Escribe un mensaje..." autocomplete="off" required autofocus>
-    <button type="submit">Enviar</button>
+    <button type="submit" class="send-btn" title="Enviar">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+    </button>
   </form>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
   <script>
     const chatBody = document.getElementById('chatBody');
     chatBody.scrollTop = chatBody.scrollHeight;
+
+    // Añade en vivo los mensajes que lleguen mientras tienes este chat abierto.
+    const chatSocket = io();
+    const OTHER_USER_ID = "{{ other.id }}";
+
+    chatSocket.on("new_message", (data) => {
+      if (String(data.from_id) !== OTHER_USER_ID) return;
+
+      const emptyMsg = chatBody.querySelector(".empty");
+      if (emptyMsg) emptyMsg.remove();
+
+      const row = document.createElement("div");
+      row.className = "bubble-row theirs";
+
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      bubble.textContent = data.content;
+
+      const time = document.createElement("div");
+      time.className = "bubble-time";
+      const now = new Date();
+      time.textContent = String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0");
+
+      row.appendChild(bubble);
+      row.appendChild(time);
+      chatBody.appendChild(row);
+      chatBody.scrollTop = chatBody.scrollHeight;
+    });
   </script>
   {% include "_incoming_call.html" %}
 </body>

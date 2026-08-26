@@ -5,10 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Menú · Conecta</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <meta name="theme-color" content="#0B0E1A">
   <style>
     body { display: block; }
     .wrap { max-width: 420px; margin: 0 auto; padding: 28px 20px 20px; }
-
     .menu-profile {
       display: flex; align-items: center; gap: 14px; padding: 16px;
       border: 1px solid #1D2138; border-radius: 14px; text-decoration: none;
@@ -21,7 +22,6 @@
     }
     .menu-profile-name { font-weight: 700; font-size: 15px; }
     .menu-profile-sub { font-size: 12.5px; color: var(--text-dim); }
-
     .menu-list { display: flex; flex-direction: column; gap: 8px; }
     .menu-item {
       display: flex; align-items: center; gap: 12px; padding: 14px 16px;
@@ -71,5 +71,7 @@
 
   {% set active_tab = 'menu' %}
   {% include "_bottom_nav.html" %}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
+  {% include "_incoming_call.html" %}
 </body>
 </html>

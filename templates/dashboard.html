@@ -5,20 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Conecta</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <meta name="theme-color" content="#0B0E1A">
   <style>
     body { display: block; }
-
     .top-bar {
       display: flex; align-items: center; justify-content: center;
       padding: 16px 24px; border-bottom: 1px solid #1D2138;
     }
     .top-bar .brand { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-    .top-bar .brand-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--pulse); }
-
     .wrap { max-width: 760px; margin: 0 auto; padding: 32px 20px 20px; }
     .wrap h2 { margin: 0 0 4px; }
     .wrap .subtitle { color: var(--text-dim); font-size: 14px; margin: 0 0 26px; }
-
     .user-grid {
       display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 16px;
     }
@@ -28,19 +26,14 @@
       transition: border-color .15s ease, background .15s ease;
     }
     .user-card:hover { border-color: var(--accent-soft); background: var(--bg-panel); }
-    .user-card-avatar-link { display: block; }
-    .user-avatar {
-      width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent);
-    }
+    .user-avatar { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); }
     .user-avatar-fallback {
       width: 64px; height: 64px; border-radius: 50%; background: var(--accent);
       display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 22px;
     }
     .user-name { font-weight: 600; font-size: 14px; }
     .user-card-links { display: flex; gap: 8px; }
-    .user-card-links a {
-      font-size: 12px; text-decoration: none; color: var(--accent-soft); font-weight: 600;
-    }
+    .user-card-links a { font-size: 12px; text-decoration: none; color: var(--accent-soft); font-weight: 600; }
     .user-card-links a:hover { text-decoration: underline; }
     .empty { color: var(--text-dim); font-size: 14px; text-align: center; padding: 60px 0; }
   </style>
@@ -58,7 +51,7 @@
       <div class="user-grid">
         {% for u in users %}
           <div class="user-card">
-            <a href="{{ url_for('profile', user_id=u.id) }}" class="user-card-avatar-link">
+            <a href="{{ url_for('profile', user_id=u.id) }}">
               {% if u.display_photo %}
                 <img class="user-avatar" src="{{ u.display_photo }}" alt="">
               {% else %}
