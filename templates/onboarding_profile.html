@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ active_language }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -57,20 +57,26 @@
       <input type="file" id="photoInput" name="photo" accept=".png,.jpg,.jpeg,.webp">
 
       <div class="field">
-        <label for="name">Nombre a mostrar</label>
+        <label for="name">{{ t('onboarding_name_label') }}</label>
         <input type="text" id="name" name="name" required autocomplete="off">
       </div>
 
       <div class="field">
-        <label for="birthdate">Fecha de nacimiento</label>
+        <label for="birthdate">{{ t('onboarding_birthdate_label') }}</label>
         <input type="date" id="birthdate" name="birthdate" required>
       </div>
 
-      <button type="submit" class="btn-primary">Inicio</button>
+      <button type="submit" class="btn-primary">{{ t('onboarding_finish') }}</button>
     </form>
   </div>
 
   <script>
+    // Solo permite elegir fechas de hace 18 años o más.
+    const birthdateInput = document.getElementById("birthdate");
+    const eighteenYearsAgo = new Date();
+    eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
+    birthdateInput.max = eighteenYearsAgo.toISOString().split("T")[0];
+
     const photoInput = document.getElementById("photoInput");
     const avatarPreview = document.getElementById("avatarPreview");
     const avatarFallback = document.getElementById("avatarFallback");

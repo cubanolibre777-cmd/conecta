@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="{{ active_language }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Términos del servicio · Conecta</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+  <style>
+    body { display: block; }
+    .wrap { max-width: 480px; margin: 0 auto; padding: 24px 20px 40px; }
+    .top-row { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+    .top-row a { color: var(--text-dim); display: flex; }
+    .top-row h2 { margin: 0; font-size: 19px; }
+    .legal-text { color: var(--text-dim); font-size: 14px; line-height: 1.7; }
+    .legal-text h3 { color: var(--text-main); font-size: 15.5px; margin: 24px 0 8px; }
+    .legal-text p { margin: 0 0 10px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top-row">
+      <a href="{{ url_for('menu_page') }}">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </a>
+      <h2>{{ t('settings_terms') }}</h2>
+    </div>
+
+    <div class="legal-text">
+      <p><em>Este es un texto de partida genérico — sustitúyelo por tus términos reales antes de publicar la app (te recomendamos que los revise un abogado).</em></p>
+
+      <h3>1. Edad mínima</h3>
+      <p>Debes tener al menos 18 años para usar Conecta.</p>
+
+      <h3>2. Tokens y pagos</h3>
+      <p>Los tokens se compran con dinero real y se usan para iniciar videollamadas dentro de la app. Las compras se procesan a través de Stripe. Los tokens no son reembolsables salvo que la ley aplicable exija lo contrario.</p>
+
+      <h3>3. Conducta de los usuarios</h3>
+      <p>Está prohibido usar la app para acosar, amenazar o compartir contenido ilegal. Nos reservamos el derecho de suspender cuentas que incumplan estas normas.</p>
+
+      <h3>4. Cancelación</h3>
+      <p>Puedes borrar tu cuenta en cualquier momento desde Menú → Borrar la cuenta. Esto elimina tus datos de forma permanente.</p>
+
+      <h3>5. Cambios en estos términos</h3>
+      <p>Podemos actualizar estos términos ocasionalmente. Te avisaremos de cambios importantes.</p>
+
+      <h3>6. Contacto</h3>
+      <p>Para dudas sobre estos términos, contacta a [tu email de contacto aquí].</p>
+    </div>
+  </div>
+</body>
+</html>

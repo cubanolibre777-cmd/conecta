@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ active_language }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -39,7 +39,7 @@
       {% endif %}
     {% endwith %}
 
-    <span class="field-label">Género</span>
+    <span class="field-label">{{ t('onboarding_gender_label') }}</span>
 
     <form method="POST" id="genderForm">
       <input type="hidden" name="gender" id="genderInput" value="">
@@ -47,15 +47,15 @@
       <div class="gender-options">
         <div class="gender-option" data-value="masculino">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10" cy="14" r="6"/><path d="M14.5 9.5L21 3M21 3h-5M21 3v5"/></svg>
-          <span>Masculino</span>
+          <span>{{ t('onboarding_gender_male') }}</span>
         </div>
         <div class="gender-option" data-value="femenino">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="9" r="6"/><path d="M12 15v7M9 19h6"/></svg>
-          <span>Femenino</span>
+          <span>{{ t('onboarding_gender_female') }}</span>
         </div>
       </div>
 
-      <button type="submit" class="btn-primary">Próximo</button>
+      <button type="submit" class="btn-primary">{{ t('onboarding_next') }}</button>
     </form>
   </div>
 

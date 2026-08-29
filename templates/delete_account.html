@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="{{ active_language }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Borrar cuenta · Conecta</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+  <style>
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .wrap { width: 100%; max-width: 380px; padding: 24px; text-align: center; }
+    .warn-icon {
+      width: 64px; height: 64px; border-radius: 50%; background: rgba(255,107,129,0.12);
+      display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: var(--error);
+    }
+    h2 { margin: 0 0 10px; }
+    .warn-text { color: var(--text-dim); font-size: 14px; line-height: 1.6; margin-bottom: 26px; }
+    .btn-danger {
+      width: 100%; padding: 13px; border-radius: 10px; border: none; background: var(--error);
+      color: white; font-size: 15px; font-weight: 700; font-family: inherit; cursor: pointer; margin-bottom: 10px;
+    }
+    .btn-danger:hover { background: #ff334c; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="warn-icon">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </div>
+
+    <h2>{{ t('delete_account_heading') }}</h2>
+    <p class="warn-text">
+      {{ t('delete_account_warning') | safe }}
+    </p>
+
+    <form method="POST">
+      <button type="submit" class="btn-danger">{{ t('delete_account_confirm') }}</button>
+    </form>
+
+    <div class="switch-link">
+      <a href="{{ url_for('menu_page') }}">{{ t('delete_account_cancel') }}</a>
+    </div>
+  </div>
+</body>
+</html>

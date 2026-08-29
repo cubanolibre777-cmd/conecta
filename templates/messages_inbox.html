@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ active_language }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mensajes · Conecta</title>
+  <title>Mensaje · Conecta</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
   <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
   <meta name="theme-color" content="#0B0E1A">
@@ -13,14 +13,37 @@
       display: flex; justify-content: space-between; align-items: center;
       padding: 18px 20px 10px; position: sticky; top: 0; background: var(--bg-deep); z-index: 5;
     }
-    .top-row h2 { margin: 0; font-size: 21px; }
-    .new-btn {
-      width: 38px; height: 38px; border-radius: 50%; background: var(--accent); color: white;
-      display: flex; align-items: center; justify-content: center; text-decoration: none;
+    .top-row h2 { margin: 0; font-size: 22px; }
+    .top-row-actions { display: flex; align-items: center; gap: 8px; }
+    .icon-btn {
+      width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; color: var(--text-dim); text-decoration: none;
     }
-    .new-btn:hover { background: #7C6CF7; }
+    .icon-btn:hover { background: var(--bg-panel); color: var(--text-main); }
+    .icon-btn.new-btn { background: var(--accent); color: white; }
+    .icon-btn.new-btn:hover { background: #7C6CF7; }
 
     .wrap { max-width: 480px; margin: 0 auto; padding: 4px 12px 20px; }
+
+    .special-row {
+      display: flex; align-items: center; gap: 12px; padding: 12px;
+      border-radius: 14px; text-decoration: none; color: var(--text-main); margin-bottom: 4px;
+    }
+    .special-row:hover { background: var(--bg-panel); }
+    .special-icon-circle {
+      width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .special-icon-circle.visitors { background: rgba(255, 184, 76, 0.15); color: #FFB84C; }
+    .special-title { font-weight: 700; font-size: 14.5px; }
+    .special-sub { font-size: 12.5px; color: var(--text-dim); }
+    .special-count {
+      margin-left: auto; min-width: 22px; height: 22px; border-radius: 999px; background: var(--accent);
+      color: white; font-size: 11px; font-weight: 700; display: flex; align-items: center;
+      justify-content: center; padding: 0 6px;
+    }
+
+    .section-divider { height: 1px; background: #1D2138; margin: 10px 0 8px; }
 
     .conv {
       display: flex; align-items: center; gap: 12px; padding: 12px;
@@ -49,18 +72,44 @@
       color: white; font-size: 11px; font-weight: 700; display: flex; align-items: center;
       justify-content: center; padding: 0 6px;
     }
-    .empty { color: var(--text-dim); font-size: 14px; text-align: center; padding: 70px 20px; }
+    .empty { color: var(--text-dim); font-size: 14px; text-align: center; padding: 50px 20px; }
   </style>
 </head>
 <body>
   <div class="top-row">
-    <h2>Mensajes</h2>
-    <a href="{{ url_for('messages_new') }}" class="new-btn" title="Nuevo mensaje">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
-    </a>
+    <h2>{{ t('inbox_title') }}</h2>
+    <div class="top-row-actions">
+      <a href="{{ url_for('calls_history') }}" class="icon-btn" title="{{ t('inbox_calls_tooltip') }}">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      </a>
+      <a href="{{ url_for('notifications_list') }}" id="notifBellLink" class="icon-btn" title="{{ t('inbox_notif_tooltip') }}" style="position:relative;">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        {% if notif_count and notif_count > 0 %}
+          <span class="special-count" style="position:absolute; top:-2px; right:-2px; min-width:16px; height:16px; font-size:10px;">{{ '9+' if notif_count > 9 else notif_count }}</span>
+        {% endif %}
+      </a>
+      <a href="{{ url_for('messages_new') }}" class="icon-btn new-btn" title="{{ t('inbox_new_tooltip') }}">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+      </a>
+    </div>
   </div>
 
   <div class="wrap">
+    <a href="{{ url_for('visitors_list') }}" class="special-row">
+      <div class="special-icon-circle visitors">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      </div>
+      <div>
+        <div class="special-title">{{ t('inbox_visitors_title') }}</div>
+        <div class="special-sub">{{ t('inbox_visitors_sub') }}</div>
+      </div>
+      {% if visitor_count and visitor_count > 0 %}
+        <span class="special-count">{{ '9+' if visitor_count > 9 else visitor_count }}</span>
+      {% endif %}
+    </a>
+
+    <div class="section-divider"></div>
+
     {% if conversations %}
       {% for other, last_message, unread_count in conversations %}
         <a href="{{ url_for('messages_chat', user_id=other.id) }}" class="conv">
@@ -79,7 +128,14 @@
               {% endif %}
             </div>
             <div class="conv-bottom-row">
-              <span class="conv-preview {{ 'unread' if unread_count > 0 else '' }}">{{ last_message.content if last_message else "" }}</span>
+              <span class="conv-preview {{ 'unread' if unread_count > 0 else '' }}">
+                {% if last_message %}
+                  {% if last_message.is_gift %}{{ t('inbox_gift_label') }}
+                  {% elif last_message.image_filename and not last_message.content %}{{ t('inbox_photo_label') }}
+                  {% else %}{{ last_message.content }}
+                  {% endif %}
+                {% endif %}
+              </span>
               {% if unread_count > 0 %}
                 <span class="conv-unread-badge">{{ '9+' if unread_count > 9 else unread_count }}</span>
               {% endif %}
@@ -88,7 +144,7 @@
         </a>
       {% endfor %}
     {% else %}
-      <div class="empty">Aún no tienes conversaciones.<br>Pulsa el botón "+" para empezar a chatear.</div>
+      <div class="empty">{{ t('inbox_empty') | safe }}</div>
     {% endif %}
   </div>
 

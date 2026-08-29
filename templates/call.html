@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ active_language }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Llamada con {{ other.name or other.email }} · Conecta</title>
+  <title>{{ other.name or other.email }} · Conecta</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
   <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
   <meta name="theme-color" content="#0B0E1A">
@@ -86,7 +86,7 @@
     <video id="localVideo" autoplay playsinline muted></video>
 
     <div class="call-topbar">
-      <a href="{{ url_for('messages_chat', user_id=other.id) }}" class="back-icon-btn" title="Volver">
+      <a href="{{ url_for('messages_chat', user_id=other.id) }}" class="back-icon-btn" title="{{ t('call_back_tooltip') }}">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       </a>
       <div class="call-topbar-info" style="align-items:center;">
@@ -107,17 +107,17 @@
         {% endif %}
       </div>
       <div class="waiting-name">{{ other.name or other.email }}</div>
-      <div class="call-status" id="callStatus">Preparando cámara y micrófono...</div>
+      <div class="call-status" id="callStatus">{{ t('call_preparing') }}</div>
     </div>
 
     <div class="call-controls">
-      <button class="call-btn" id="muteBtn" title="Silenciar micrófono">
+      <button class="call-btn" id="muteBtn" title="{{ t('call_mute_tooltip') }}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
       </button>
-      <button class="call-btn hangup" id="hangupBtn" title="Colgar">
+      <button class="call-btn hangup" id="hangupBtn" title="{{ t('call_hangup_tooltip') }}">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 9c-2.5 0-4.9.5-7 1.5-.6.3-1 .9-1 1.6v2.5c0 .7.5 1.3 1.1 1.4l3 .6c.6.1 1.2-.1 1.5-.6l1-1.5c1-.2 2.1-.3 3.4-.3s2.4.1 3.4.3l1 1.5c.4.5 1 .7 1.5.6l3-.6c.6-.1 1.1-.7 1.1-1.4V12c0-.7-.4-1.3-1-1.6C16.9 9.5 14.5 9 12 9z"/></svg>
       </button>
-      <button class="call-btn" id="videoBtn" title="Apagar cámara">
+      <button class="call-btn" id="videoBtn" title="{{ t('call_video_tooltip') }}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
       </button>
     </div>
@@ -127,6 +127,19 @@
     const OTHER_ID = "{{ other.id }}";
     const START_AS_CALLER = {{ 'true' if request.args.get('incoming') != '1' else 'false' }};
     const CALL_COST = {{ call_cost }};
+
+    // Textos traducidos, inyectados desde el servidor.
+    const I18N = {
+      noCameraMic: {{ t('call_no_camera_mic')|tojson }},
+      calling: {{ t('call_calling')|tojson }},
+      connecting: {{ t('call_connecting')|tojson }},
+      dndRejected: {{ t('call_dnd_rejected')|tojson }},
+      busyRejected: {{ t('call_busy_rejected')|tojson }},
+      rejected: {{ t('call_rejected')|tojson }},
+      endedNoTokens: {{ t('call_ended_no_tokens')|tojson }},
+      tokensPerMin: {{ t('call_tokens_per_min')|tojson }},
+      tokensLabel: {{ t('call_tokens_label')|tojson }},
+    };
 
     const socket = io();
     const remoteVideo = document.getElementById("remoteVideo");
@@ -146,28 +159,34 @@
     let billingStarted = false;
     let durationInterval = null;
     let secondsElapsed = 0;
+    let callLogId = null;
+    let chargeCount = 0;
 
     const rtcConfig = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
     async function init() {
       try {
         localStream = await navigator.mediaDevices.getUserMedia({
-          video: true,
+          video: {
+            width: { ideal: 640, max: 640 },
+            height: { ideal: 480, max: 480 },
+            frameRate: { ideal: 24, max: 24 }
+          },
           audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
         });
         localVideo.srcObject = localStream;
       } catch (err) {
-        callStatus.textContent = "No se pudo acceder a la cámara/micrófono. Revisa los permisos del navegador.";
+        callStatus.textContent = I18N.noCameraMic;
         return;
       }
 
       createPeerConnection();
 
       if (START_AS_CALLER) {
-        callStatus.textContent = "Llamando...";
+        callStatus.textContent = I18N.calling;
         socket.emit("call_request", { target_id: OTHER_ID });
       } else {
-        callStatus.textContent = "Conectando...";
+        callStatus.textContent = I18N.connecting;
         socket.emit("call_response", { target_id: OTHER_ID, accepted: true });
         startWebRTCAsCallee();
       }
@@ -207,24 +226,46 @@
       }, 1000);
     }
 
+    let callConnected = false;
+    let outcomeReported = false;
+
     function startBillingIfCaller() {
+      callConnected = true;
       if (!START_AS_CALLER || billingStarted) return;
       billingStarted = true;
+
       tokenIndicator.style.display = "block";
-      tokenIndicator.textContent = `${CALL_COST} tokens/min`;
+      tokenIndicator.textContent = I18N.tokensPerMin.replace("{cost}", CALL_COST);
+      chargeCount++;
       socket.emit("charge_minute", { target_id: OTHER_ID });
       billingInterval = setInterval(() => {
+        chargeCount++;
         socket.emit("charge_minute", { target_id: OTHER_ID });
       }, 60000);
     }
+
+    socket.on("call_log_started", (data) => {
+      callLogId = data.call_log_id;
+    });
 
     function stopBilling() {
       if (billingInterval) { clearInterval(billingInterval); billingInterval = null; }
     }
 
     socket.on("tokens_charged", (data) => {
-      tokenIndicator.textContent = `Tokens: ${data.tokens}`;
+      tokenIndicator.textContent = I18N.tokensLabel.replace("{tokens}", data.tokens);
     });
+
+    function reportCallOutcome(outcome) {
+      if (!callLogId || outcomeReported) return;
+      outcomeReported = true;
+      socket.emit("call_finished", {
+        call_log_id: callLogId,
+        outcome: outcome,
+        duration_seconds: secondsElapsed,
+        tokens_spent: chargeCount * CALL_COST,
+      });
+    }
 
     async function startWebRTCAsCaller() {
       const offer = await peerConnection.createOffer();
@@ -237,10 +278,17 @@
     socket.on("call_response", async (data) => {
       if (data.from_id != OTHER_ID) return;
       if (data.accepted) {
-        callStatus.textContent = "Conectando...";
+        callStatus.textContent = I18N.connecting;
         await startWebRTCAsCaller();
       } else {
-        callStatus.textContent = "Llamada rechazada.";
+        if (data.reason === "no_molestar") {
+          callStatus.textContent = I18N.dndRejected;
+        } else if (data.reason === "ocupado") {
+          callStatus.textContent = I18N.busyRejected;
+        } else {
+          callStatus.textContent = I18N.rejected;
+        }
+        reportCallOutcome("rechazada");
         setTimeout(() => { window.location.href = "{{ url_for('messages_chat', user_id=other.id) }}"; }, 1500);
       }
     });
@@ -266,7 +314,7 @@
     socket.on("call_end", (data) => {
       if (data.from_id != OTHER_ID) return;
       if (data.reason === "sin_tokens") {
-        callStatus.textContent = "Llamada finalizada: tokens agotados.";
+        callStatus.textContent = I18N.endedNoTokens;
       }
       endCall(false);
     });
@@ -276,6 +324,9 @@
       callEnded = true;
       stopBilling();
       if (durationInterval) clearInterval(durationInterval);
+
+      reportCallOutcome(callConnected ? "conectada" : "perdida");
+
       if (notifyOther) socket.emit("call_end", { target_id: OTHER_ID });
       if (localStream) localStream.getTracks().forEach(t => t.stop());
       if (peerConnection) peerConnection.close();

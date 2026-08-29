@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ active_language }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -31,12 +31,12 @@
 </head>
 <body>
   <div class="wrap">
-    <a href="{{ url_for('index') }}" class="back-link">← Volver</a>
-    <h2 style="margin-top:0;">Comprar tokens</h2>
-    <p style="color:var(--text-dim); font-size:14px; margin-top:-6px;">Elige un paquete para continuar al pago.</p>
+    <a href="{{ url_for('index') }}" class="back-link">← {{ t('tokens_back') }}</a>
+    <h2 style="margin-top:0;">{{ t('tokens_title') }}</h2>
+    <p style="color:var(--text-dim); font-size:14px; margin-top:-6px;">{{ t('tokens_subtitle') }}</p>
 
     {% for p in packages %}
-      <a href="{{ url_for('tokens_checkout', package_id=p.id) }}" class="package-card">
+      <a href="{{ url_for('tokens_checkout', package_id=p.id, next=next_url) }}" class="package-card">
         <div>
           <div class="package-tokens">{{ p.tokens }} tokens</div>
           <div class="package-sub">{{ p.name }}</div>
@@ -46,7 +46,7 @@
     {% endfor %}
 
     <div class="test-note">
-      Modo de prueba: usa la tarjeta 4242 4242 4242 4242, cualquier fecha futura y cualquier CVC para simular un pago exitoso.
+      {{ t('tokens_test_note') }}
     </div>
   </div>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>

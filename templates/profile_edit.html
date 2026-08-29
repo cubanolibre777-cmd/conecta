@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ active_language }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -44,26 +44,26 @@
         <div class="avatar-preview-fallback">{{ user.name[:1] if user.name else user.email[:1] }}</div>
       {% endif %}
 
-      <h2 style="text-align:center; margin-top:0;">Editar perfil</h2>
+      <h2 style="text-align:center; margin-top:0;">{{ t('profedit_title') }}</h2>
 
       <form method="POST" enctype="multipart/form-data">
         <div class="field">
-          <label for="name">Nombre</label>
+          <label for="name">{{ t('profedit_name_label') }}</label>
           <input type="text" id="name" name="name" value="{{ user.name or '' }}" required>
         </div>
         <div class="field">
-          <label for="bio">Bio</label>
+          <label for="bio">{{ t('profedit_bio_label') }}</label>
           <textarea id="bio" name="bio" maxlength="280">{{ user.bio or '' }}</textarea>
-          <div class="char-count">Máx. 280 caracteres</div>
+          <div class="char-count">{{ t('profedit_bio_max') }}</div>
         </div>
         <div class="field">
-          <label for="photo">Foto de perfil</label>
+          <label for="photo">{{ t('profedit_photo_label') }}</label>
           <input type="file" id="photo" name="photo" accept=".png,.jpg,.jpeg,.webp">
         </div>
-        <button type="submit" class="btn-primary">Guardar cambios</button>
+        <button type="submit" class="btn-primary">{{ t('profedit_save') }}</button>
       </form>
 
-      <div class="switch-link"><a href="{{ url_for('profile') }}">Cancelar</a></div>
+      <div class="switch-link"><a href="{{ url_for('profile') }}">{{ t('profedit_cancel') }}</a></div>
     </div>
   </div>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>

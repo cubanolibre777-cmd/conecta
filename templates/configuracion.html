@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="{{ active_language }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configuración · Conecta</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <meta name="theme-color" content="#0B0E1A">
+  <style>
+    body { display: block; }
+    .wrap { max-width: 420px; margin: 0 auto; padding: 28px 20px 20px; }
+
+    .menu-profile {
+      display: flex; align-items: center; gap: 14px; padding: 16px;
+      border: 1px solid #1D2138; border-radius: 14px; text-decoration: none;
+      color: var(--text-main); margin-bottom: 20px;
+    }
+    .menu-avatar { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); }
+    .menu-avatar-fallback {
+      width: 52px; height: 52px; border-radius: 50%; background: var(--accent);
+      display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 20px;
+    }
+    .menu-profile-name { font-weight: 700; font-size: 15px; }
+    .menu-profile-sub { font-size: 12.5px; color: var(--text-dim); }
+
+    .menu-list { display: flex; flex-direction: column; gap: 8px; }
+    .menu-item {
+      display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+      border: 1px solid #1D2138; border-radius: 12px; text-decoration: none;
+      color: var(--text-main); font-size: 14.5px; font-weight: 600;
+      background: none; width: 100%; text-align: left; font-family: inherit; cursor: pointer;
+    }
+    .menu-item:hover { border-color: var(--accent-soft); background: var(--bg-panel); }
+    .menu-item svg { width: 20px; height: 20px; color: var(--text-dim); flex-shrink: 0; }
+    .menu-item.danger { color: var(--error); }
+    .menu-item.danger svg { color: var(--error); }
+
+    .toggle-switch {
+      margin-left: auto; width: 42px; height: 24px; border-radius: 999px; position: relative; flex-shrink: 0;
+      background: #2A2E4A; transition: background .15s ease;
+    }
+    .toggle-switch.on { background: var(--accent); }
+    .toggle-switch::after {
+      content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%;
+      background: white; transition: left .15s ease;
+    }
+    .toggle-switch.on::after { left: 21px; }
+
+    .menu-item-current { margin-left: auto; font-size: 12.5px; color: var(--text-dim); font-weight: 600; }
+
+    /* Panel deslizante para elegir idioma (mismo patrón que el filtro de país en Explorar) */
+    .lang-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 998;
+      display: none; align-items: flex-end; justify-content: center;
+    }
+    .lang-overlay.open { display: flex; }
+    .lang-sheet {
+      background: var(--bg-panel); border-radius: 22px 22px 0 0; width: 100%; max-width: 480px;
+      padding: 22px 18px calc(22px + env(safe-area-inset-bottom)); max-height: 70vh; overflow-y: auto;
+    }
+    .lang-sheet-title { font-weight: 700; font-size: 15px; margin-bottom: 14px; }
+    .lang-option-grid { display: flex; flex-direction: column; gap: 6px; }
+    .lang-option {
+      padding: 12px 14px; border-radius: 10px; border: 1px solid #2A2E4A; background: var(--bg-deep);
+      color: var(--text-main); text-decoration: none; font-size: 14px; font-weight: 600;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .lang-option.active { background: var(--accent); border-color: var(--accent); color: white; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a href="{{ url_for('profile') }}" class="menu-profile">
+      {% if user.display_photo %}
+        <img class="menu-avatar" src="{{ user.display_photo }}" alt="">
+      {% else %}
+        <div class="menu-avatar-fallback">{{ user.name[:1] if user.name else user.email[:1] }}</div>
+      {% endif %}
+      <div>
+        <div class="menu-profile-name">{{ user.name or user.email }}</div>
+        <div class="menu-profile-sub">{{ t('settings_view_profile') }}</div>
+      </div>
+    </a>
+
+    <div class="menu-list">
+      <button type="button" class="menu-item" onclick="document.getElementById('langOverlay').classList.add('open')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/></svg>
+        {{ t('settings_language') }}
+        <span class="menu-item-current">{{ language_names[active_language] }}</span>
+      </button>
+      <a href="{{ url_for('privacy_policy') }}" class="menu-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg>
+        {{ t('settings_privacy_policy') }}
+      </a>
+      <a href="{{ url_for('terms_of_service') }}" class="menu-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+        {{ t('settings_terms') }}
+      </a>
+      <a href="{{ url_for('toggle_dnd') }}" class="menu-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        {{ t('settings_dnd') }}
+        <span class="toggle-switch {{ 'on' if user.do_not_disturb else '' }}"></span>
+      </a>
+      {% if current_user.is_authenticated and current_user.email.lower() in admin_emails %}
+      <a href="{{ url_for('admin_age_alerts') }}" class="menu-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><path d="M21 12c0 1-4 8-9 8s-9-7-9-8 4-8 9-8 9 7 9 8z"/></svg>
+        {{ t('settings_admin_panel') }}
+      </a>
+      {% endif %}
+      <a href="{{ url_for('delete_account') }}" class="menu-item danger">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+        {{ t('settings_delete_account') }}
+      </a>
+      <a href="{{ url_for('logout') }}" class="menu-item danger">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+        {{ t('settings_logout') }}
+      </a>
+    </div>
+  </div>
+
+  <div class="lang-overlay" id="langOverlay" onclick="if(event.target===this) this.classList.remove('open')">
+    <div class="lang-sheet">
+      <div class="lang-sheet-title">{{ t('settings_language_picker_title') }}</div>
+      <div class="lang-option-grid">
+        {% for code in supported_languages %}
+          <a href="{{ url_for('set_language', lang_code=code) }}" class="lang-option {{ 'active' if active_language == code else '' }}">
+            {{ language_names[code] }}
+            {% if active_language == code %}✓{% endif %}
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  {% set active_tab = 'menu' %}
+  {% include "_bottom_nav.html" %}
+</body>
+</html>

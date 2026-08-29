@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ active_language }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -24,7 +24,7 @@
 </head>
 <body>
   <div class="wrap">
-    <h2>Elige con quién chatear</h2>
+    <h2>{{ t('msgnew_choose') }}</h2>
 
     {% if users %}
       {% for u in users %}
@@ -38,10 +38,10 @@
         </a>
       {% endfor %}
     {% else %}
-      <div class="empty">Todavía no hay más usuarios registrados.</div>
+      <div class="empty">{{ t('msgnew_empty') }}</div>
     {% endif %}
 
-    <div class="switch-link"><a href="{{ url_for('messages_inbox') }}">Volver a mensajes</a></div>
+    <div class="switch-link"><a href="{{ url_for('messages_inbox') }}">{{ t('msgnew_back') }}</a></div>
   </div>
 </body>
 </html>

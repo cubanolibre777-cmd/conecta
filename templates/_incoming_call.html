@@ -39,11 +39,11 @@
   <div class="avatar-fallback" id="incomingCallFallback"></div>
   <div class="info">
     <strong id="incomingCallName"></strong>
-    Videollamada entrante
+    {{ t('call_incoming_label') }}
   </div>
   <div class="btns">
-    <button class="accept" id="incomingCallAccept">Aceptar</button>
-    <button class="reject" id="incomingCallReject">Rechazar</button>
+    <button class="accept" id="incomingCallAccept">{{ t('friends_accept') }}</button>
+    <button class="reject" id="incomingCallReject">{{ t('friends_reject') }}</button>
   </div>
 </div>
 
@@ -62,6 +62,9 @@
     const socket = io();
     window.__conectaGlobalSocket = socket;
 
+    const I18N_SOMEONE = {{ t('generic_someone')|tojson }};
+    const I18N_PHOTO_LABEL = {{ t('inbox_photo_label')|tojson }};
+
     // --- Llamada entrante ---
     const banner = document.getElementById("incomingCallBanner");
     const photoImg = document.getElementById("incomingCallPhoto");
@@ -73,7 +76,7 @@
 
     socket.on("incoming_call", (data) => {
       currentCallerId = data.from_id;
-      nameEl.textContent = data.from_name || "Alguien";
+      nameEl.textContent = data.from_name || I18N_SOMEONE;
 
       if (data.from_photo) {
         photoImg.src = data.from_photo;
@@ -101,6 +104,14 @@
       currentCallerId = null;
     });
 
+    // Si quien te llama cuelga antes de que respondas, el aviso se cierra solo.
+    socket.on("call_end", (data) => {
+      if (currentCallerId && data.from_id == currentCallerId) {
+        banner.style.display = "none";
+        currentCallerId = null;
+      }
+    });
+
     // --- Mensaje nuevo ---
     const msgToast = document.getElementById("messageToast");
     const msgPhoto = document.getElementById("messageToastPhoto");
@@ -115,8 +126,8 @@
         return;
       }
 
-      msgName.textContent = data.from_name || "Alguien";
-      msgPreview.textContent = data.content || "";
+      msgName.textContent = data.from_name || I18N_SOMEONE;
+      msgPreview.textContent = data.content || (data.image_url ? I18N_PHOTO_LABEL : "");
       msgToast.href = "/messages/" + data.from_id;
 
       if (data.from_photo) {
@@ -144,5 +155,26 @@
       badge.textContent = next > 9 ? "9+" : next;
       badge.style.display = "flex";
     }
+
+    // --- Cambios de amistad (solicitud, aceptar, cancelar, dejar de ser amigos) ---
+    socket.on("friend_update", (data) => {
+      // Si tienes el perfil de esa persona abierto ahora mismo, recarga para
+      // reflejar el nuevo estado (icono, contadores) sin que tengas que hacerlo tú.
+      if (window.location.pathname === "/profile/" + data.from_id) {
+        window.location.reload();
+        return;
+      }
+      // Aunque no estés en su perfil, si generó una notificación real,
+      // avisa igual con el contador de la campana (junto a Mensajes).
+      if (data.notify) {
+        const bell = document.querySelector('#notifBellLink .special-count');
+        if (bell) {
+          const current = parseInt(bell.textContent) || 0;
+          const next = current + 1;
+          bell.textContent = next > 9 ? "9+" : next;
+          bell.style.display = "flex";
+        }
+      }
+    });
   })();
 </script>

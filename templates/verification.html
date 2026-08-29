@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="{{ active_language }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verificar cuenta · Conecta</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+  <!-- FINAL: Face-API desde archivos locales (v1.7.12) - Módulo ES6 -->
+  <script type="module">
+    import * as faceapi from "{{ url_for('static', filename='js/lib/face-api.esm.js') }}";
+    window.faceapi = faceapi;
+  </script>
+  <style>
+    body { display: block; }
+    .wrap { max-width: 420px; margin: 0 auto; padding: 24px 20px 40px; }
+    .top-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+    .top-row a { color: var(--text-dim); display: flex; }
+    .top-row h2 { margin: 0; font-size: 19px; }
+    .info-text { color: var(--text-dim); font-size: 13.5px; line-height: 1.6; margin-bottom: 24px; }
+    .info-text strong { color: var(--text-main); }
+
+    .step-label { font-size: 13px; color: var(--text-dim); font-weight: 700; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.04em; }
+
+    .ref-upload {
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+      padding: 20px 16px; border: 1.5px dashed #2A2E4A; border-radius: 14px; background: var(--bg-panel);
+      cursor: pointer; margin-bottom: 26px; color: var(--text-dim); text-align: center;
+      aspect-ratio: 1/1; max-width: 200px; margin-left: auto; margin-right: auto;
+    }
+    .ref-upload svg { width: 26px; height: 26px; }
+    .ref-upload span { font-size: 12.5px; }
+    .ref-upload img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
+    #refPhotoInput { display: none; }
+
+    .camera-box {
+      position: relative; width: 100%; aspect-ratio: 3/4; border-radius: 14px; overflow: hidden;
+      background: #05060C; border: 1px solid #1D2138; margin-bottom: 10px;
+    }
+    .camera-box video { width: 100%; height: 100%; object-fit: cover; display: block; transform: scaleX(-1); }
+    .camera-status {
+      position: absolute; bottom: 10px; left: 10px; right: 10px; background: rgba(0,0,0,0.6);
+      color: white; font-size: 12px; padding: 8px 10px; border-radius: 8px; text-align: center;
+    }
+
+    .verify-btn {
+      width: 100%; padding: 13px; border-radius: 10px; border: none; background: var(--accent);
+      color: white; font-size: 15px; font-weight: 700; font-family: inherit; cursor: pointer; margin-bottom: 26px;
+    }
+    .verify-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .flash { padding: 11px 14px; border-radius: 10px; font-size: 13.5px; margin-bottom: 18px; }
+    .flash.error { background: rgba(255,107,129,0.12); color: var(--error); border: 1px solid rgba(255,107,129,0.3); }
+    .flash.success { background: rgba(53,224,196,0.12); color: var(--pulse); border: 1px solid rgba(53,224,196,0.3); }
+
+    .result-box {
+      display: none; padding: 20px; border-radius: 14px; text-align: center; margin-top: 10px;
+    }
+    .result-box.ok { background: rgba(53,224,196,0.1); border: 1px solid rgba(53,224,196,0.3); }
+    .result-box.fail { background: rgba(255,107,129,0.1); border: 1px solid rgba(255,107,129,0.3); }
+    .result-box h3 { margin: 0 0 6px; }
+    .result-box p { color: var(--text-dim); font-size: 13.5px; margin: 0; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top-row">
+      <a href="{{ url_for('profile') }}">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </a>
+      <h2>{{ t('verify_title') }}</h2>
+    </div>
+    <p class="info-text">
+      {{ t('verify_intro') }}
+    </p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="step-label">{{ t('verify_step1') }}</div>
+    <label class="ref-upload" id="refUploadLabel" for="refPhotoInput">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+      <span id="refUploadText">{{ t('verify_upload_cta') }}</span>
+    </label>
+    <input type="file" id="refPhotoInput" accept=".png,.jpg,.jpeg,.webp">
+
+    <div class="step-label">{{ t('verify_step2') }}</div>
+    <div class="camera-box">
+      <!-- FIXED: Sin autoplay para evitar solicitud de permisos en carga -->
+      <video id="cameraVideo" playsinline muted></video>
+      <div class="camera-status" id="cameraStatus">{{ t('verify_loading_models') }}</div>
+    </div>
+
+      <button type="button" class="verify-btn" id="activateCameraBtn" disabled>{{ t('verify_activate_camera') }}</button>
+      <button type="button" class="verify-btn" id="verifyBtn" disabled style="display:none;">{{ t('verify_verify_now') }}</button>
+
+    <div class="result-box" id="resultBox">
+      <h3 id="resultTitle"></h3>
+      <p id="resultText"></p>
+    </div>
+  </div>
+
+  <canvas id="hiddenCanvas" style="display:none;"></canvas>
+
+  <script>
+    // FINAL: Carga desde archivos locales en static/js/lib/model/
+    const MODEL_PATH = "{{ url_for('static', filename='js/lib/model/') }}";
+
+    // Textos traducidos, inyectados desde el servidor.
+    const I18N = {
+      loadingModels: {{ t('verify_loading_models')|tojson }},
+      ready: {{ t('verify_ready')|tojson }},
+      noCamera: {{ t('verify_no_camera')|tojson }},
+      analyzing: {{ t('verify_analyzing')|tojson }},
+      failNoRefFace: {{ t('verify_fail_no_ref_face')|tojson }},
+      failNoLiveFace: {{ t('verify_fail_no_live_face')|tojson }},
+      failNoMatch: {{ t('verify_fail_no_match')|tojson }},
+      failAge: {{ t('verify_fail_age')|tojson }},
+      errorGeneric: {{ t('verify_error_generic')|tojson }},
+      successTitle: {{ t('verify_success_title')|tojson }},
+      successMsg: {{ t('verify_success_msg')|tojson }},
+      failTitle: {{ t('verify_fail_title')|tojson }},
+      completed: {{ t('verify_completed')|tojson }},
+      retry: {{ t('verify_retry')|tojson }},
+    };
+
+    const refPhotoInput = document.getElementById("refPhotoInput");
+    const refUploadLabel = document.getElementById("refUploadLabel");
+    const refUploadText = document.getElementById("refUploadText");
+    const cameraVideo = document.getElementById("cameraVideo");
+    const cameraStatus = document.getElementById("cameraStatus");
+    const verifyBtn = document.getElementById("verifyBtn");
+    const resultBox = document.getElementById("resultBox");
+    const resultTitle = document.getElementById("resultTitle");
+    const resultText = document.getElementById("resultText");
+
+    let refImageEl = null;
+    let modelsReady = false;
+
+    refPhotoInput.addEventListener("change", () => {
+      const file = refPhotoInput.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        refUploadLabel.innerHTML = "";
+        const img = document.createElement("img");
+        img.src = e.target.result;
+        img.onload = () => { refImageEl = img; checkReady(); };
+        refUploadLabel.appendChild(img);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    async function loadModels() {
+      try {
+        // Esperar a que Face-API esté disponible
+        let attempts = 0;
+        while (typeof faceapi === 'undefined' && attempts < 30) {
+          await new Promise(r => setTimeout(r, 100));
+          attempts++;
+        }
+
+        if (typeof faceapi === 'undefined') {
+          throw new Error("Face-API no disponible. ¿Está el archivo en static/js/lib/face-api.min.js?");
+        }
+
+        console.log("Cargando modelos desde:", MODEL_PATH);
+
+        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_PATH);
+        await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_PATH);
+        await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_PATH);
+        await faceapi.nets.ageGenderNet.loadFromUri(MODEL_PATH);
+
+        modelsReady = true;
+        cameraStatus.textContent = I18N.ready;
+        document.getElementById("activateCameraBtn").disabled = false;
+        checkReady();
+      } catch (err) {
+        console.error("Error cargando modelos:", err);
+        cameraStatus.textContent = "Error: " + err.message;
+        cameraStatus.style.background = "rgba(255,107,129,0.2)";
+        cameraStatus.style.color = "#FF6B81";
+      }
+    }
+
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+        cameraVideo.srcObject = stream;
+        // FIXED: Llamar play() explícitamente sin depender de autoplay
+        cameraVideo.play().catch(err => console.error("Error reproduciendo video:", err));
+      } catch (err) {
+        cameraStatus.textContent = I18N.noCamera;
+        console.error("Error de cámara:", err);
+      }
+    }
+
+    // FIXED: Usar DOMContentLoaded en lugar de window.load
+    document.addEventListener("DOMContentLoaded", () => {
+      loadModels();
+    });
+
+    document.getElementById("activateCameraBtn").addEventListener("click", async () => {
+      await startCamera();
+      document.getElementById("activateCameraBtn").style.display = "none";
+      document.getElementById("verifyBtn").style.display = "block";
+      checkReady();
+    });
+
+    function checkReady() {
+      const verifyBtn = document.getElementById("verifyBtn");
+      verifyBtn.disabled = !(refImageEl && modelsReady && cameraVideo.srcObject);
+    }
+
+    verifyBtn.addEventListener("click", async () => {
+      verifyBtn.disabled = true;
+      cameraStatus.textContent = I18N.analyzing;
+
+      try {
+        const refDetection = await faceapi
+          .detectSingleFace(refImageEl, new faceapi.TinyFaceDetectorOptions())
+          .withFaceLandmarks()
+          .withFaceDescriptor();
+
+        if (!refDetection) {
+          showResult(false, I18N.failNoRefFace);
+          verifyBtn.disabled = false;
+          return;
+        }
+
+        // Toma varios fotogramas de la cámara en vivo, unos 3 segundos.
+        const liveDescriptors = [];
+        const liveAges = [];
+
+        for (let i = 0; i < 6; i++) {
+          const detection = await faceapi
+            .detectSingleFace(cameraVideo, new faceapi.TinyFaceDetectorOptions())
+            .withFaceLandmarks()
+            .withFaceDescriptor()
+            .withAgeAndGender();
+
+          if (detection) {
+            liveDescriptors.push(detection.descriptor);
+            liveAges.push(detection.age);
+          }
+          await new Promise(r => setTimeout(r, 500));
+        }
+
+        if (liveDescriptors.length === 0) {
+          showResult(false, I18N.failNoLiveFace);
+          verifyBtn.disabled = false;
+          return;
+        }
+
+        // Distancia promedio entre la foto de referencia y los fotogramas en vivo.
+        const distances = liveDescriptors.map(d => faceapi.euclideanDistance(refDetection.descriptor, d));
+        const avgDistance = distances.reduce((a, b) => a + b, 0) / distances.length;
+        const matchScore = Math.max(0, 1 - avgDistance);  // 0 a 1, más alto = más parecido
+
+        const avgAge = liveAges.reduce((a, b) => a + b, 0) / liveAges.length;
+
+        const resp = await fetch("{{ url_for('verification_submit') }}", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ match_score: matchScore, estimated_age: avgAge }),
+        });
+        const result = await resp.json();
+
+        if (result.status === "verificado") {
+          showResult(true, I18N.successMsg);
+        } else if (result.status === "restringido_edad") {
+          showResult(false, I18N.failAge);
+        } else {
+          showResult(false, I18N.failNoMatch);
+        }
+      } catch (err) {
+        showResult(false, I18N.errorGeneric);
+        console.error("Error de verificación:", err);
+        verifyBtn.disabled = false;
+      }
+    });
+
+    function showResult(ok, message) {
+      resultBox.className = "result-box " + (ok ? "ok" : "fail");
+      resultBox.style.display = "block";
+      resultTitle.textContent = ok ? I18N.successTitle : I18N.failTitle;
+      resultText.textContent = message;
+      cameraStatus.textContent = ok ? I18N.completed : I18N.retry;
+      if (ok) {
+        setTimeout(() => { window.location.href = "{{ url_for('profile') }}"; }, 2500);
+      } else {
+        verifyBtn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>

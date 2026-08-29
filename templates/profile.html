@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ active_language }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,46 +8,309 @@
   <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
   <meta name="theme-color" content="#0B0E1A">
   <style>
-    .center-box {
-      width: 100%; min-height: 100vh; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 24px;
+    body { display: block; }
+
+    .profile-header {
+      background: linear-gradient(160deg, #2D3FE0 0%, #1B237A 100%);
+      padding: 20px 20px 30px; position: relative;
     }
-    .avatar-lg { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); }
-    .avatar-lg-fallback {
-      width: 96px; height: 96px; border-radius: 50%; background: var(--accent);
-      display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 32px;
+    .header-top { display: flex; justify-content: space-between; align-items: flex-start; }
+    .back-icon-btn {
+      width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; color: #fff; text-decoration: none; background: rgba(255,255,255,0.12);
     }
-    .bio-text { color: var(--text-dim); max-width: 380px; font-size: 14.5px; line-height: 1.6; }
-    .actions { display: flex; gap: 10px; margin-top: 10px; }
+    .edit-icon-btn {
+      width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; color: #fff; text-decoration: none; background: rgba(255,255,255,0.12);
+    }
+
+    .profile-main { display: flex; align-items: center; gap: 16px; margin-top: 14px; }
+    .avatar-wrap { position: relative; flex-shrink: 0; }
+    .profile-avatar {
+      width: 76px; height: 76px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.5);
+    }
+    .profile-avatar-fallback {
+      width: 76px; height: 76px; border-radius: 50%; background: rgba(255,255,255,0.15);
+      border: 2px solid rgba(255,255,255,0.5); display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 700; font-size: 28px;
+    }
+    .friend-hand-btn {
+      position: absolute; bottom: -4px; right: -4px; width: 30px; height: 30px; border-radius: 50%;
+      background: #FF4D5A; border: 2px solid #1B237A; display: flex; align-items: center;
+      justify-content: center; color: white; text-decoration: none;
+    }
+    .friend-hand-btn svg { width: 15px; height: 15px; }
+    .friend-hand-btn.status-friends { background: #2ED47A; }
+    .friend-hand-btn.status-pending-sent { background: #FFC94A; color: #3A2E00; }
+    .friend-hand-btn.status-pending-received { background: #FFC94A; color: #3A2E00; }
+
+    .profile-name { color: #fff; font-size: 21px; font-weight: 700; margin: 0 0 6px; }
+    .profile-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .meta-chip {
+      display: flex; align-items: center; gap: 4px; font-size: 12.5px; color: rgba(255,255,255,0.9);
+      background: rgba(255,255,255,0.12); padding: 4px 10px; border-radius: 999px;
+    }
+    .verify-chip {
+      font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.85);
+      background: rgba(255,255,255,0.14); padding: 5px 12px; border-radius: 999px;
+      text-decoration: none;
+    }
+
+    .stats-row { display: flex; justify-content: space-around; margin-top: 26px; }
+    .stat-item { text-align: center; text-decoration: none; }
+    .stat-num { color: #fff; font-size: 19px; font-weight: 700; }
+    .stat-label { color: rgba(255,255,255,0.75); font-size: 12px; margin-top: 2px; }
+
+    .body-section { background: var(--bg-deep); border-radius: 22px 22px 0 0; margin-top: -16px; padding: 22px 18px 100px; position: relative; }
+    .wrap { max-width: 480px; margin: 0 auto; }
+
+    .flash { padding: 11px 14px; border-radius: 10px; font-size: 13.5px; margin-bottom: 16px; }
+    .flash.error { background: rgba(255,107,129,0.12); color: var(--error); border: 1px solid rgba(255,107,129,0.3); }
+    .flash.success { background: rgba(53,224,196,0.12); color: var(--pulse); border: 1px solid rgba(53,224,196,0.3); }
+
+    .card-row { display: flex; gap: 12px; margin-bottom: 14px; }
+    .stat-card {
+      flex: 1; border-radius: 16px; padding: 16px; text-decoration: none; position: relative; overflow: hidden;
+    }
+    .stat-card.tokens-card { background: linear-gradient(135deg, #2A2E4A 0%, #171B33 100%); }
+    .stat-card.vip-card { background: linear-gradient(135deg, #4C3FBF 0%, #2A2E4A 100%); }
+    .stat-card-label { color: #fff; font-weight: 700; font-size: 14.5px; display: flex; align-items: center; justify-content: space-between; }
+    .stat-card-value { display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.85); font-size: 15px; font-weight: 700; margin-top: 10px; }
+    .stat-card-sub { color: rgba(255,255,255,0.6); font-size: 12px; margin-top: 8px; }
+
+    .invite-card {
+      display: block; text-decoration: none; border-radius: 16px; padding: 16px; margin-bottom: 14px;
+      background: linear-gradient(135deg, #FF6B81 0%, #C83A5A 100%);
+    }
+    .invite-title { color: #fff; font-weight: 700; font-size: 14.5px; }
+    .invite-sub { color: rgba(255,255,255,0.75); font-size: 12px; margin-top: 6px; }
+
+    .menu-list { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+    .menu-item {
+      display: flex; align-items: center; gap: 12px; padding: 14px 4px;
+      text-decoration: none; color: var(--text-main); font-size: 14.5px; font-weight: 600;
+      border-bottom: 1px solid #1D2138;
+    }
+    .menu-item svg { width: 20px; height: 20px; color: var(--text-dim); flex-shrink: 0; }
+    .menu-item .arrow { margin-left: auto; color: var(--text-dim); }
+    .menu-item .level-badge {
+      margin-left: auto; background: var(--bg-panel); color: var(--text-dim); font-size: 11px;
+      font-weight: 700; padding: 3px 10px; border-radius: 999px; margin-right: 6px;
+    }
+
+    .section-title { font-size: 13px; color: var(--text-dim); font-weight: 700; margin: 4px 0 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; }
+    .gallery-item { position: relative; aspect-ratio: 1/1; border-radius: 12px; overflow: hidden; background: var(--bg-panel); border: 1px solid #1D2138; }
+    .gallery-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .gallery-delete-btn {
+      position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border-radius: 50%;
+      background: rgba(0,0,0,0.6); color: white; display: flex; align-items: center; justify-content: center;
+      text-decoration: none;
+    }
+    .gallery-add-btn {
+      aspect-ratio: 1/1; border-radius: 12px; border: 1.5px dashed #2A2E4A; background: var(--bg-panel);
+      display: flex; align-items: center; justify-content: center; color: var(--text-dim); cursor: pointer;
+    }
+    .gallery-add-btn svg { width: 24px; height: 24px; }
+    #galleryFileInput { display: none; }
+
+    .bottom-actions {
+      position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px;
+      display: flex; gap: 10px; padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
+      background: var(--bg-panel); border-top: 1px solid #1D2138; z-index: 10;
+    }
+    .bottom-action-btn {
+      flex: 1; padding: 13px; border-radius: 12px; border: none; font-weight: 700; font-size: 14px;
+      text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .bottom-action-btn svg { width: 17px; height: 17px; }
+    .bottom-action-btn.call-btn { background: var(--accent); color: white; }
+    .bottom-action-btn.msg-btn { background: var(--bg-deep); color: var(--text-main); border: 1px solid #2A2E4A; }
   </style>
 </head>
 <body>
-  <div class="center-box">
-    {% if user.display_photo %}
-      <img class="avatar-lg" src="{{ user.display_photo }}" alt="">
-    {% else %}
-      <div class="avatar-lg-fallback">{{ user.name[:1] if user.name else user.email[:1] }}</div>
-    {% endif %}
-
-    <h2 style="margin-bottom:0;">{{ user.name or user.email }}</h2>
-    <p class="footnote">{{ user.email }}</p>
-
-    {% if user.bio %}
-      <p class="bio-text">{{ user.bio }}</p>
-    {% else %}
-      <p class="bio-text">Aún no ha añadido una bio.</p>
-    {% endif %}
-
-    <div class="actions">
+  <div class="profile-header">
+    <div class="header-top">
+      <a href="{{ url_for('index') }}" class="back-icon-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </a>
       {% if is_own_profile %}
-        <a href="{{ url_for('profile_edit') }}" class="btn-google" style="width:auto; padding:10px 22px;">Editar perfil</a>
-      {% else %}
-        <a href="{{ url_for('messages_chat', user_id=user.id) }}" class="btn-google" style="width:auto; padding:10px 22px;">Enviar mensaje</a>
-        <a href="{{ url_for('call_page', user_id=user.id) }}" class="btn-google" style="width:auto; padding:10px 22px;">Videollamada</a>
+        <a href="{{ url_for('profile_edit') }}" class="edit-icon-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </a>
       {% endif %}
-      <a href="{{ url_for('index') }}" class="btn-google" style="width:auto; padding:10px 22px;">Volver</a>
+    </div>
+
+    <div class="profile-main">
+      <div class="avatar-wrap">
+        {% if user.display_photo %}
+          <img class="profile-avatar" src="{{ user.display_photo }}" alt="">
+        {% else %}
+          <div class="profile-avatar-fallback">{{ user.name[:1] if user.name else user.email[:1] }}</div>
+        {% endif %}
+
+        {% if not is_own_profile %}
+          {% if friendship_status == 'friends' %}
+            <a href="{{ url_for('friend_request_send', user_id=user.id) }}" class="friend-hand-btn status-friends" title="{{ t('profile_friend_status_friends') }}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 8a2 2 0 1 1 4 0v5a7 7 0 0 1-7 7h-2a7 7 0 0 1-6.3-4L4 10.5a1.5 1.5 0 1 1 3-1l1 2V4a1.5 1.5 0 1 1 3 0v6m0-6a1.5 1.5 0 1 1 3 0v6m0-4a1.5 1.5 0 1 1 3 0v4"/></svg>
+            </a>
+          {% elif friendship_status == 'pending_sent' %}
+            <span class="friend-hand-btn status-pending-sent" title="{{ t('profile_friend_status_pending_sent') }}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 8a2 2 0 1 1 4 0v5a7 7 0 0 1-7 7h-2a7 7 0 0 1-6.3-4L4 10.5a1.5 1.5 0 1 1 3-1l1 2V4a1.5 1.5 0 1 1 3 0v6m0-6a1.5 1.5 0 1 1 3 0v6m0-4a1.5 1.5 0 1 1 3 0v4"/></svg>
+            </span>
+          {% elif friendship_status == 'pending_received' %}
+            <a href="{{ url_for('friend_request_accept', request_id=pending_request_id) }}" class="friend-hand-btn status-pending-received" title="{{ t('profile_friend_status_pending_received') }}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 8a2 2 0 1 1 4 0v5a7 7 0 0 1-7 7h-2a7 7 0 0 1-6.3-4L4 10.5a1.5 1.5 0 1 1 3-1l1 2V4a1.5 1.5 0 1 1 3 0v6m0-6a1.5 1.5 0 1 1 3 0v6m0-4a1.5 1.5 0 1 1 3 0v4"/></svg>
+            </a>
+          {% else %}
+            <a href="{{ url_for('friend_request_send', user_id=user.id) }}" class="friend-hand-btn" title="{{ t('profile_friend_add') }}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 8a2 2 0 1 1 4 0v5a7 7 0 0 1-7 7h-2a7 7 0 0 1-6.3-4L4 10.5a1.5 1.5 0 1 1 3-1l1 2V4a1.5 1.5 0 1 1 3 0v6m0-6a1.5 1.5 0 1 1 3 0v6m0-4a1.5 1.5 0 1 1 3 0v4"/></svg>
+            </a>
+          {% endif %}
+        {% endif %}
+      </div>
+
+      <div>
+        <div class="profile-name">{{ user.name or user.email }}</div>
+        <div class="profile-meta">
+          {% if user.gender or age %}
+            <span class="meta-chip">
+              {% if user.gender == 'masculino' %}♂{% elif user.gender == 'femenino' %}♀{% endif %}
+              {{ age or '' }}
+            </span>
+          {% endif %}
+          {% if user.country %}
+            <span class="meta-chip">{{ user.country }}</span>
+          {% endif %}
+          {% if is_own_profile %}
+            {% if user.verification_status == 'verificado' %}
+              <span class="meta-chip" style="background: rgba(53,224,196,0.18); color: var(--pulse);">{{ t('profile_verified_badge') }}</span>
+            {% elif user.verification_status == 'restringido_edad' %}
+              <span class="meta-chip" style="background: rgba(255,107,129,0.18); color: var(--error);">{{ t('profile_under_review') }}</span>
+            {% else %}
+              <a href="{{ url_for('verification_request') }}" class="verify-chip">{{ t('profile_go_verify') }}</a>
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <a href="{{ url_for('friends_list') if is_own_profile else '#' }}" class="stat-item">
+        <div class="stat-num">{{ friends_count }}</div>
+        <div class="stat-label">{{ t('profile_stat_friends') }}</div>
+      </a>
+      <div class="stat-item">
+        <div class="stat-num">{{ fans_count }}</div>
+        <div class="stat-label">{{ t('profile_stat_fans') }}</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">{{ following_count }}</div>
+        <div class="stat-label">{{ t('profile_stat_following') }}</div>
+      </div>
     </div>
   </div>
+
+  <div class="body-section">
+    <div class="wrap">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      {% if is_own_profile %}
+        <div class="card-row">
+          <a href="{{ url_for('tokens_deposit') }}" class="stat-card tokens-card">
+            <div class="stat-card-label">{{ t('profile_tokens_label') }} <span>›</span></div>
+            <div class="stat-card-value">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="9"/></svg>
+              {{ user.tokens }}
+            </div>
+          </a>
+          <a href="{{ url_for('coming_soon') }}" class="stat-card vip-card">
+            <div class="stat-card-label">{{ t('profile_vip_label') }}</div>
+            <div class="stat-card-sub">{{ t('profile_vip_sub') }}</div>
+          </a>
+        </div>
+
+        <a href="{{ url_for('coming_soon') }}" class="invite-card">
+          <div class="invite-title">{{ t('profile_invite_title') }}</div>
+          <div class="invite-sub">{{ t('profile_invite_sub') }}</div>
+        </a>
+      {% endif %}
+
+      <div class="section-title">{{ t('profile_photos_label') }}</div>
+      <div class="gallery-grid">
+        {% for p in photos %}
+          <div class="gallery-item">
+            <img src="{{ url_for('static', filename='uploads/' + p.filename) }}" alt="">
+            {% if is_own_profile %}
+              <a href="{{ url_for('delete_gallery_photo', photo_id=p.id) }}" class="gallery-delete-btn" title="{{ t('profile_delete_photo_tooltip') }}">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              </a>
+            {% endif %}
+          </div>
+        {% endfor %}
+        {% if is_own_profile and photos|length < 5 %}
+          <form method="POST" action="{{ url_for('upload_gallery_photo') }}" enctype="multipart/form-data" id="galleryForm">
+            <input type="file" id="galleryFileInput" name="gallery_photo" accept=".png,.jpg,.jpeg,.webp" onchange="document.getElementById('galleryForm').submit()">
+            <label for="galleryFileInput" class="gallery-add-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            </label>
+          </form>
+        {% endif %}
+      </div>
+
+      {% if is_own_profile %}
+        <div class="menu-list">
+          <a href="{{ url_for('bonus_page') }}" class="menu-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            {{ t('profile_menu_daily_bonus') }}
+            <span class="arrow">›</span>
+          </a>
+          <a href="{{ url_for('tokens_deposit') }}" class="menu-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7L12 3 4 7m16 0v10l-8 4m8-14L12 11m0 12V11m0 0L4 7m8 4v0"/></svg>
+            {{ t('profile_menu_package') }}
+            <span class="arrow">›</span>
+          </a>
+          <a href="{{ url_for('coming_soon') }}" class="menu-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4.5L18.5 21 12 16.5 5.5 21 7.5 13.5 2 9h7z"/></svg>
+            {{ t('profile_menu_level') }}
+            <span class="level-badge">Lv0</span>
+            <span class="arrow">›</span>
+          </a>
+          <a href="{{ url_for('menu_page') }}" class="menu-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+            {{ t('profile_menu_settings') }}
+            <span class="arrow">›</span>
+          </a>
+        </div>
+      {% else %}
+        {% if user.bio %}
+          <p style="color: var(--text-dim); font-size: 14px; line-height: 1.6; padding: 6px 4px 20px;">{{ user.bio }}</p>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+
+  {% if is_own_profile %}
+    {% set active_tab = 'menu' %}
+    {% include "_bottom_nav.html" %}
+  {% else %}
+    <div class="bottom-actions">
+      <a href="{{ url_for('call_page', user_id=user.id) }}" class="bottom-action-btn call-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+        {{ t('profile_call_btn') }}
+      </a>
+      <a href="{{ url_for('messages_chat', user_id=user.id) }}" class="bottom-action-btn msg-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.3 0-2.5-.3-3.6-.8L3 21l1.8-5.4A8.5 8.5 0 1 1 21 11.5z"/></svg>
+        {{ t('profile_message_btn') }}
+      </a>
+    </div>
+  {% endif %}
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
   {% include "_incoming_call.html" %}
 </body>

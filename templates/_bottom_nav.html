@@ -27,21 +27,21 @@
 <div class="bottom-bar">
   <a href="{{ url_for('index') }}" class="{{ 'active' if active_tab == 'inicio' else '' }}">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
-    Inicio
+    {{ t('nav_home') }}
   </a>
   <a href="{{ url_for('users_list') }}" class="{{ 'active' if active_tab == 'usuarios' else '' }}">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-    Usuarios
+    {{ t('nav_users') }}
   </a>
   <a href="{{ url_for('messages_inbox') }}" class="{{ 'active' if active_tab == 'chat' else '' }}">
     <span class="icon-wrap">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.3 0-2.5-.3-3.6-.8L3 21l1.8-5.4A8.5 8.5 0 1 1 21 11.5z"/></svg>
       <span class="nav-badge" id="navChatBadge" style="{{ '' if unread_messages_count and unread_messages_count > 0 else 'display:none;' }}">{{ '9+' if unread_messages_count and unread_messages_count > 9 else (unread_messages_count or '') }}</span>
     </span>
-    Chat
+    {{ t('nav_chat') }}
   </a>
-  <a href="{{ url_for('menu_page') }}" class="{{ 'active' if active_tab == 'menu' else '' }}">
+  <a href="{{ url_for('profile') }}" class="{{ 'active' if active_tab == 'menu' else '' }}">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
-    Menú
+    {{ t('nav_menu') }}
   </a>
 </div>

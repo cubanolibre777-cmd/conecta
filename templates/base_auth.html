@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ active_language }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,8 +16,8 @@
       Conecta
     </div>
     <div class="pitch">
-      <h1>{% block pitch_title %}Habla, comparte y llama, todo en un mismo sitio.{% endblock %}</h1>
-      <p>{% block pitch_body %}Mensajes, fotos y videollamadas en una sola cuenta.{% endblock %}</p>
+      <h1>{% block pitch_title %}{{ t('auth_pitch_title') }}{% endblock %}</h1>
+      <p>{% block pitch_body %}{{ t('auth_pitch_body') }}{% endblock %}</p>
     </div>
     <div class="footnote">© 2026 Conecta</div>
   </div>
